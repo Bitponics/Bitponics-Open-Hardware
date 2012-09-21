@@ -17,7 +17,7 @@ void setup_light(){
 }
 
 //-------------------------------------------------------
-Light get_light(){
+Light getLight(){
   Light l;
 
   l.lum = tsl.getFullLuminosity();
@@ -25,12 +25,12 @@ Light get_light(){
   l.full = l.lum & 0xFFFF;
   l.vis = l.full- l.ir;
   l.lux = tsl.calculateLux(l.full, l.ir);
-  //print_light(l);
+  //printLight(l);
   return l;
     
 }
 //-------------------------------------------------------
-void print_light( Light _l ){
+void printLight( Light _l ){
   
   Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   Serial.print("Lum: ");Serial.print(_l.lum);   Serial.print("\t");

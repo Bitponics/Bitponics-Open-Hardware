@@ -16,9 +16,11 @@ void loop(){
   
 }
 
-void setup_sensors(){
+void setup_sensors(unsigned int DATABAUD){
   
   setup_temps();
   setup_light();
+  setup_ec(DATABAUD);
+  setup_ph(DATABAUD);
   
 }

@@ -60,7 +60,7 @@ void wifiSetup(unsigned int BAUD) {
   Serial.println(wifi.getSSID(buf, sizeof(buf)));
   
   /* Uncomment to Test AdHoc Network//Setup */
-  wifi.setDeviceID("WiFly-GSX");
+  //wifi.setDeviceID("WiFly-GSX");
   
   Serial.print(F("DeviceID: "));
   String d= wifi.getDeviceID(buf, sizeof(buf));
@@ -81,7 +81,7 @@ void wifiSetup(unsigned int BAUD) {
     default:
         loadServerKeys();
         wifiAssociated();
-        setup_sensors(); ///eventually will need to set up all sensors
+        setup_sensors(38400); ///eventually will need to set up all sensors
         basicAuthConnect("GET","cycles", false);
     break;
     
@@ -352,7 +352,7 @@ void wifiAdhocRequestHandler(){
 void wifiConnect(char *ssid, char *pass, char *mode){
   /* Setup the wifi to store wifi network & passphrase */
   Serial.println(F("Saving network"));
-  setup_sensors(); ///eventually will need to set up all sensors
+  setup_sensors(38400); ///eventually will need to set up all sensors
   String m=mode;
   uint8_t i;
   if(m=="WPA_MODE"){ 
@@ -424,24 +424,46 @@ void wifiConnect(char *ssid, char *pass, char *mode){
 */
 char* makeJson(char* b, int s){
     // will take variables in addition to a buffer and create a data string for the server.
+    
+    String json = "{\"air\":";
     tempChar(getAirTemp(), opt);
     String air = opt;
-    Serial.print("air temp: ");Serial.println(air);
+    json+=air;
+    //Serial.print("air temp: ");Serial.println(air);
+    json+= ",\"water\":";
     tempChar(getWaterTemp(),opt);
     String water = opt;
-    Serial.print("water temp: ");Serial.println(water);
+    json+=water;
+    //Serial.print("water temp: ");Serial.println(water);
+    json+=",\"hum\":";
     tempChar(getHumidity(),opt);
     String hum = opt;
-    Serial.print("humidity: ");Serial.println(hum);
-    //Light light = get_light();
-    //sprintf_P(data, "{ \"air\": %s, \"water\": %s, \"hum\": %s }",air,water,hum);
-    sprintf(buf,"{ \"air\": %s }",air);
-    //sprintf(b,"{ \"air\": %s, \"water\": %s, \"hum\": %s }",air,water,hum);
-    Serial.println("After");
-    //sprintf(b,"{ \"air\": %s, \"water\": %s, \"hum\": %s, \"ir\": %d, \"full\": %d, \"lux\": %d }",air,water,hum, light.ir,light.full,light.lux);
+    json+=hum;
+    //Serial.print("humidity: ");Serial.println(hum);
+    Light light = getLight();
+    json+= ",\"ir\":";
+    json+= light.ir;
+    json+= ",\"full\":";
+    json+= light.full;
+    json+= ",\"lux\":";
+    json+= light.lux;
     
+    EC ec = getEc(getWaterTemp());
+    
+    json+=",\"ec\":";
+    json+=ec.conductivity;
+    
+    tempChar(getPh(getWaterTemp()),opt);
+    String ph = opt;
+    json+=",\"ph\":";
+    json+=ph;
+    
+    json+="}";
+    Serial.println(json);
+    json.toCharArray(b, s);
+
     //b = "{ \"light\":\"3232.32\", \"air\": \" 47.5\", \"water\":\" 37.5\" }";
-    //return b;
+    return b;
   
 }
 //********************************************************************************
@@ -487,7 +509,7 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){
   uint32_t a;
   char *mac = wifi.getMAC(opt, sizeof(opt));
   macAddress(mac, MAC);
-  char *json;
+  char* json;
   if(_bGetData)  json = makeJson(data, sizeof(data) ); //this is where we will make all of our data
   
   sprintf(buf,"%s /api/devices/%s/%s HTTP/1.1",_type,MAC,_route);  //format header route
@@ -498,7 +520,7 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){
   String fert = tempChar(getWaterTemp(), opt); 
   Serial.print("String: ");Serial.println(fert);
   
-  if(_bGetData) Serial.println(json); //print data we are going to write
+  if(_bGetData){Serial.println("JSON: "); Serial.println(json);} //print data we are going to write
   Serial.println(SKEY);
   
   //create our SHA256 Hash
