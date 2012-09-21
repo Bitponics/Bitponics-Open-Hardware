@@ -1,24 +1,27 @@
 //Custom Datatype for Bitponics project
 
-//Arduino Struct Hack 
-//http://arduino.cc/playground/Code/Struct#FAQ
+#ifndef customDataTypes_H
+#define customDataTypes_H
 
-
-struct Value{
+struct Value {
   int val;
   long int dur; 
     
 };
 
-struct Cycle {
+struct  Cycle{
   int ID;
   int start;
   Value live;
   Value rest;
 };
 
-struct IncomingCycle{
-  String one;
-  String two;
+
+struct  Light {
+    
+  uint32_t lum, lux;
+  uint16_t ir, full, vis;
+  
 };
 
+#endif;

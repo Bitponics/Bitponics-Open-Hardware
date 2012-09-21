@@ -12,6 +12,7 @@
 
 #include <WiFlyHQ.h>
 #include "sha256.h"
+#include "customDataTypes.h"
 
 WiFly wifi;
 
@@ -32,12 +33,14 @@ boolean wifiConnection();
 void wifiLoop();
 
 char buf[80];
-char data[256];
+char data[200];
 char opt[20];
 boolean bwifiSet;
-unsigned long time =0;
+unsigned long time = 30000;
+boolean bCycles;
 char* Networks;
 
+//********************************************************************************
 void wifiSetup(unsigned int BAUD) {
   
   Serial.println();
@@ -56,8 +59,8 @@ void wifiSetup(unsigned int BAUD) {
   Serial.print(F("SSID: "));
   Serial.println(wifi.getSSID(buf, sizeof(buf)));
   
-  /* Uncomment to Test AdHoc Network// Setup */
-  //wifi.setDeviceID("WiFly-GSX");
+  /* Uncomment to Test AdHoc Network//Setup */
+  wifi.setDeviceID("WiFly-GSX");
   
   Serial.print(F("DeviceID: "));
   String d= wifi.getDeviceID(buf, sizeof(buf));
@@ -67,11 +70,10 @@ void wifiSetup(unsigned int BAUD) {
   if(d.indexOf("AdhocServer")>0) WIFI_STATE = WIFI_UNSET;
   if(d.indexOf("WPAClient")>0) WIFI_STATE = WIFI_WPA;
   if(d.indexOf("WEPClient")>0) WIFI_STATE = WIFI_WEP;
-  
+  wifi.setProtocol(WIFLY_PROTOCOL_TCP);
   switch(WIFI_STATE){
     
     case(WIFI_UNSET):
-        scanNetworks();
         wifiAdhoc();
 
     break;
@@ -79,21 +81,14 @@ void wifiSetup(unsigned int BAUD) {
     default:
         loadServerKeys();
         wifiAssociated();
+        setup_sensors(); ///eventually will need to set up all sensors
+        basicAuthConnect("GET","cycles", false);
     break;
     
   }
-  
-  if (wifi.isConnected()) {
-    Serial.println(F("Old connection active. Closing"));
-    wifi.close();
-  }
-      
-  wifi.setProtocol(WIFLY_PROTOCOL_TCP);
-
-  Serial.println(F("Ready"));
-  
+     
 }
-
+//********************************************************************************
 void loadServerKeys(){
     wifi.getFTPUSER(SKEY, sizeof(SKEY));
     Serial.print("SKEY: ");Serial.println(SKEY);
@@ -128,7 +123,6 @@ void wifiAssociated(){
 }
 
 //********************************************************************************
-//********************************************************************************
 void scanNetworks(){
    Serial.println(F("//////////////////////////////////////////////////////////////////"));
    Serial.println(F("Setting up Scan Mode..."));
@@ -139,13 +133,14 @@ void scanNetworks(){
    Serial.println(networks);
    //Serial.println(buf);
    Networks = wifi.getScanNew(data, sizeof(data), true);
-   Serial.print(Networks);
+   Serial.println(Networks);
    Serial.println(F("//////////////////////////////////////////////////////////////////"));
 }
 
 //********************************************************************************
 void wifiAdhoc(){
       WIFI_STATE=WIFI_UNSET;
+      scanNetworks();
       Serial.println(F("Setting up Adhoc Mode..."));
       bwifiSet = false;
       wifi.setAuth(WIFLY_WLAN_AUTH_OPEN);
@@ -162,7 +157,7 @@ void wifiAdhoc(){
       } else {
         
         Serial.print(F("Adhoc Failed"));
-        
+        //reboot
      }
      
     if (wifi.getPort() != 80) {
@@ -173,6 +168,8 @@ void wifiAdhoc(){
 	wifi.reboot();
 	delay(3000);
     }
+    
+    Serial.println("Adhoc Ready");
    
 }
 
@@ -197,13 +194,15 @@ void wifiLoop(){
         case(WIFI_WPA):
         
           if (wifi.available() > 0) {
-            char ch = wifi.read();
-            Serial.write(ch);
-            if (ch == '\n') Serial.write('\r');
+            wifiAssocRequestHandler();
+            //char ch = wifi.read();
+            //Serial.write(ch);
+            //if (ch == '\n') Serial.write('\r');
           }else{
            if(millis()>time){
              Serial.println(F("Making Server Call"));
-             basicAuthConnect("PUT","sensor_logs");
+             basicAuthConnect("PUT","sensor_logs", true);
+             //basicAuthConnect("GET","refresh_status", false);
              time = millis()+36000;
            }
             
@@ -212,13 +211,11 @@ void wifiLoop(){
         case(WIFI_WEP):
         
           if (wifi.available() > 0) {
-            char ch = wifi.read();
-            Serial.write(ch);
-            if (ch == '\n') Serial.write('\r');
+              wifiAssocRequestHandler();
           }else{
            if(millis()>time){
              Serial.println(F("Making Server Call"));
-             basicAuthConnect("PUT","sensor_logs");
+             basicAuthConnect("GET","refresh_status", false);
              time = millis()+36000;
            }
           }
@@ -230,6 +227,60 @@ void wifiLoop(){
    
 }
 
+//********************************************************************************
+//********************************************************************************
+
+void wifiAssocRequestHandler(){
+  
+    if (wifi.gets(buf, sizeof(buf))) {
+      if(strncmp_P(buf, PSTR("HTTP/1.1 200 OK"), 15) == 0){
+            Serial.println(F("HTTP/1.1 200 OK"));
+            if (wifi.match(F("Content-Type:"))){ Serial.print(F("Content-Type: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
+            if (wifi.match(F("Set-Cookie"))){ Serial.print(F("Set-Cookie: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
+            if (wifi.match(F("X-Bpn-Resourcename:"))){
+              Serial.print(F("X-Bpn-Resourcename: ")); wifi.gets(data, sizeof(data)); Serial.println(data);
+              String _pr = data;
+              _pr.trim();
+              //check which resource has come through
+              if (_pr=="cycles") {
+                
+                Serial.println(F("<------Received Cycles------>"));
+                if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                if (wifi.match(F("Connection:"))){Serial.print(F("Connection: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                wifi.gets(data, sizeof(data));
+                Serial.println(data);
+                if (wifi.match(F("CYCLES="))) {wifi.getsTerm(data, sizeof(data),'\a'); Serial.println(data); }
+                // pass the cycles to be stored
+                
+              }else if(_pr=="refresh_status"){
+                
+                Serial.println(F("<------Received Refresh Status------>"));
+                if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                if (wifi.match(F("Connection:"))){Serial.print(F("Connection: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                wifi.gets(data, sizeof(data));
+                Serial.println(data);
+                //to do 
+                //action item on REFRESH & OVERRIDES information
+                if (wifi.match(F("REFRESH="))){Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);}
+                if (wifi.match(F("OVERRIDES="))){Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);}
+              }
+         }    
+      } else if(strncmp_P(buf,PSTR("HTTP/1.1 401 Unauthorized"),23)==0 ){
+        //action item for unathorized server requests?
+        Serial.println(F("<------Received Unauthorized------>"));
+        Serial.println("HTTP/1.1 401 Unauthorized");
+        wifi.gets(buf, sizeof(buf));
+        Serial.println(buf);
+        
+      } else {
+       Serial.println(buf);
+       wifi.gets(buf, sizeof(buf));
+       Serial.println(buf);
+        
+      }
+      
+    }
+}
 
 //********************************************************************************
 //********************************************************************************
@@ -269,7 +320,9 @@ void wifiAdhocRequestHandler(){
                 if (wifi.match(F("PKEY="))) wifi.gets(PKEY, sizeof(PKEY));
                 //else _pkey = 'error'; 
                 Serial.println(PKEY);
-
+                
+                sendConfirm(ssid, pass, mode, SKEY, PKEY);
+                
                 if(wifi.setFtpUser(SKEY)) Serial.println(F("SAVED SKEY"));
                 if(wifi.setFtpPassword(PKEY)) Serial.println(F("SAVED PKEY"));
                 
@@ -280,18 +333,16 @@ void wifiAdhocRequestHandler(){
                 
                 loadServerKeys();                
                     
-                sendConfirm(ssid, pass, mode, SKEY, PKEY);
-              
 		Serial.println(F("Sent greeting page"));
                 wifiConnect(ssid, pass, mode);
 		
 	    } else {
 	        /* Unexpected request */
-		Serial.print(F("Unexpected: "));
+		Serial.print(F("Unexpected Request : "));
 		Serial.println(buf);
 		wifi.flushRx();		// discard rest of input
 		Serial.println(F("Sending 404"));
-		send404();
+		//send404();
 	    }
 	} 
   
@@ -301,11 +352,10 @@ void wifiAdhocRequestHandler(){
 void wifiConnect(char *ssid, char *pass, char *mode){
   /* Setup the wifi to store wifi network & passphrase */
   Serial.println(F("Saving network"));
-  
+  setup_sensors(); ///eventually will need to set up all sensors
   String m=mode;
   uint8_t i;
   if(m=="WPA_MODE"){ 
-    
     if(wifi.setAuth(WIFLY_WLAN_AUTH_OPEN))Serial.println(F("Set WPA Auth"));
     if(wifi.setPassphrase(pass))Serial.println(F("Set Pass"));
     if(wifi.setDeviceID("Bitponics-WPAClient")) Serial.print(F("Set DeviceID "));
@@ -356,8 +406,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
     Serial.print("DeviceID: ");
     Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
    
-    basicAuthConnect("PUT","sensor_logs");
-    //basicConnection();
+    basicAuthConnect("PUT","sensor_logs", true);
     
   }else {
     Serial.println(F("Connection Failed"));
@@ -375,9 +424,24 @@ void wifiConnect(char *ssid, char *pass, char *mode){
 */
 char* makeJson(char* b, int s){
     // will take variables in addition to a buffer and create a data string for the server.
-    //sprintf(buf,"{}",_type,mac,_route);
-    b = "{ \"light\":\"3232.32\", \"air\": \" 47.5\", \"water\":\" 37.5\" }";
-    return b;
+    tempChar(getAirTemp(), opt);
+    String air = opt;
+    Serial.print("air temp: ");Serial.println(air);
+    tempChar(getWaterTemp(),opt);
+    String water = opt;
+    Serial.print("water temp: ");Serial.println(water);
+    tempChar(getHumidity(),opt);
+    String hum = opt;
+    Serial.print("humidity: ");Serial.println(hum);
+    //Light light = get_light();
+    //sprintf_P(data, "{ \"air\": %s, \"water\": %s, \"hum\": %s }",air,water,hum);
+    sprintf(buf,"{ \"air\": %s }",air);
+    //sprintf(b,"{ \"air\": %s, \"water\": %s, \"hum\": %s }",air,water,hum);
+    Serial.println("After");
+    //sprintf(b,"{ \"air\": %s, \"water\": %s, \"hum\": %s, \"ir\": %d, \"full\": %d, \"lux\": %d }",air,water,hum, light.ir,light.full,light.lux);
+    
+    //b = "{ \"light\":\"3232.32\", \"air\": \" 47.5\", \"water\":\" 37.5\" }";
+    //return b;
   
 }
 //********************************************************************************
@@ -413,24 +477,35 @@ void printHash(uint8_t* hash) {
 //********************************************************************************
 /** 
     Make Basic Auth Connection with server using BPN_DEVICE Auth Protocol
+    _type - GET, POST, PUT 
+    _route - the server location we are looking for assuming /api/devices/:deviceId
+    _bGetData - if we are sending JSON sensor data or not
+    
 */
-boolean basicAuthConnect(char* _type, char* _route){
+boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){
   uint8_t* hash;
   uint32_t a;
   char *mac = wifi.getMAC(opt, sizeof(opt));
   macAddress(mac, MAC);
-  char *json = makeJson(data, sizeof(data) ); //this is where we will make all of our data
+  char *json;
+  if(_bGetData)  json = makeJson(data, sizeof(data) ); //this is where we will make all of our data
   
-  //format header route
-  //devices
-  sprintf(buf,"%s /api/devices/%s/%s HTTP/1.1",_type,MAC,_route);
+  sprintf(buf,"%s /api/devices/%s/%s HTTP/1.1",_type,MAC,_route);  //format header route
   String path = buf; 
-  Serial.print(path); Serial.println(json); //print data we are going to write
+  Serial.println(path); 
+  
+  //get temp celcius as string
+  String fert = tempChar(getWaterTemp(), opt); 
+  Serial.print("String: ");Serial.println(fert);
+  
+  if(_bGetData) Serial.println(json); //print data we are going to write
   Serial.println(SKEY);
+  
   //create our SHA256 Hash
-  Sha256.initHmac((uint8_t*)SKEY,16);//create hash with Secret/Private Key
+  Sha256.initHmac((uint8_t*)SKEY,16); //create hash with Secret/Private Key
   Sha256.print(path);
-  Sha256.print(json);
+  if(_bGetData) Sha256.print(json);
+  Sha256.print(fert);
   hash = Sha256.resultHmac(); //must save hash to use
   printHash(hash);
   Serial.println();
@@ -448,12 +523,14 @@ boolean basicAuthConnect(char* _type, char* _route){
     wifi.println(F("Transfer-Encoding: chunked"));
     //Authorization: HMAC 16bytepublickey:hexEncodingOfHash
     wifi.print(F("Authorization: BPN_DEVICE "));wifiAuthHeader(PKEY,hash);
+    wifi.print(F("X-Bpn-Fert:"));//need to print out temp
+    wifi.println(fert);
     wifi.println(F("Cache-Control: no-cache"));
     //wifi.print(F("Content-Length:"));wifi.println( strlen(json) );
     wifi.println(F("Connection: close"));
     wifi.println(); //end header
-    wifi.sendChunk(json);
-    wifi.sendChunkln();
+    if(_bGetData) wifi.sendChunk(json);
+    wifi.sendChunkln(); //end body
     return true;
    }else{
     Serial.println("Failed to connect");
@@ -464,9 +541,7 @@ boolean basicAuthConnect(char* _type, char* _route){
 
 //********************************************************************************
 //********************************************************************************
-/** Get Device Mac Address without : 
-    Loop three characters at a time skip 3rd character
-    Requesting 3rd will throw out of bounds in last iteration of i */
+/** Return Device Mac Address without : */
 char macAddress(char *_m, char a[]){
   int c =0;  
   for(int i = 0; i<strlen(_m); i+=3){
