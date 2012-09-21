@@ -36,11 +36,15 @@ char buf[80];
 char data[200];
 char opt[20];
 boolean bwifiSet;
-unsigned long time = 36000;
-unsigned long pollDelay = 10000;
+/* time stuff */
+unsigned long time_sensor = 36000;
+unsigned long time_status = 36000;
+unsigned long sensorPutDelay = 36000;
 boolean bCycles;
 char* Networks;
-boolean bPUT = true;
+boolean bReceivedStatus = true;
+boolean bReceivedSensor = true;
+boolean bReceivedCycles = true;
 
 //********************************************************************************
 void wifiSetup(unsigned int BAUD) {
@@ -85,6 +89,7 @@ void wifiSetup(unsigned int BAUD) {
         wifiAssociated();
         setup_sensors(38400); ///eventually will need to set up all sensors
         basicAuthConnect("GET","cycles", false);
+        bReceivedCycles = false;
     break;
     
   }
@@ -201,17 +206,29 @@ void wifiLoop(){
             //Serial.write(ch);
             //if (ch == '\n') Serial.write('\r');
           }else{
-           if(millis()>time){
-             Serial.println(F("Making Server Call"));
-             if(bPUT){
-                  basicAuthConnect("PUT","sensor_logs", true);
-                  bPUT=false;
-             }else{
-                  basicAuthConnect("GET","refresh_status", false);
-                  bPUT=true;
+             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+              bReceivedSensor = false;
+              basicAuthConnect("PUT","sensor_logs", true);
+              time_sensor = millis()+sensorPutDelay; 
              }
-             time = millis()+pollDelay;
-           }
+             
+             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+               bReceivedStatus = false;
+               basicAuthConnect("GET","refresh_status", false);
+               time_status = millis();
+             }
+            
+//           if(millis()>time){
+//             Serial.println(F("Making Server Call"));
+//             if(bPUT){
+//                  basicAuthConnect("PUT","sensor_logs", true);
+//                  bPUT=false;
+//             }else{
+//                  basicAuthConnect("GET","refresh_status", false);
+//                  bPUT=true;
+//             }
+//             time = millis()+pollDelay;
+//           }
             
           }
         break;
@@ -220,17 +237,29 @@ void wifiLoop(){
           if (wifi.available() > 0) {
               wifiAssocRequestHandler();
           }else{
-           if(millis()>time){
-             Serial.println(F("Making Server Call"));
-             if(bPUT){
-                  basicAuthConnect("PUT","sensor_logs", true);
-                  bPUT=false;
-             }else{
-                  basicAuthConnect("GET","refresh_status", false);
-                  bPUT=true;
+            
+             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+              bReceivedSensor = false;
+              basicAuthConnect("PUT","sensor_logs", true);
+              time_sensor = millis()+sensorPutDelay; 
              }
-             time = millis()+pollDelay;
-           }
+             
+             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+               bReceivedStatus = false;
+               basicAuthConnect("GET","refresh_status", false);
+               time_status = millis();
+             }
+//           if(millis()>time){
+//             Serial.println(F("Making Server Call"));
+//             if(bPUT){
+//                  basicAuthConnect("PUT","sensor_logs", true);
+//                  bPUT=false;
+//             }else{
+//                  basicAuthConnect("GET","refresh_status", false);
+//                  bPUT=true;
+//             }
+//             time = millis()+pollDelay;
+//           }
           }
         break;
 //      default:
@@ -264,7 +293,7 @@ void wifiAssocRequestHandler(){
                 Serial.println(data);
                 if (wifi.match(F("CYCLES="))) {wifi.getsTerm(data, sizeof(data),'\a'); Serial.println(data); }
                 // pass the cycles to be stored
-                
+                bReceivedCycles = true;
               }else if(_pr=="refresh_status"){
                 
                 Serial.println(F("<------Received Refresh Status------>"));
@@ -276,13 +305,12 @@ void wifiAssocRequestHandler(){
                 //action item on REFRESH & OVERRIDES information
                 if (wifi.match(F("REFRESH="))){Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);}
                 if (wifi.match(F("OVERRIDES="))){Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);}
+                bReceivedStatus = true;
+                
               }else if(_pr=="sensor_logs"){
-                if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
-                if (wifi.match(F("Connection:"))){Serial.print(F("Connection: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
-                wifi.gets(data, sizeof(data));
-                Serial.println(data);
-                wifi.gets(data, sizeof(data));
-                Serial.println(data);
+
+                  wifi.flushRx();		// discard rest of input
+                  bReceivedSensor = true;
               }
          }    
       } else if(strncmp_P(buf,PSTR("HTTP/1.1 401 Unauthorized"),23)==0 ){
