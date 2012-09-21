@@ -36,9 +36,11 @@ char buf[80];
 char data[200];
 char opt[20];
 boolean bwifiSet;
-unsigned long time = 30000;
+unsigned long time = 36000;
+unsigned long pollDelay = 10000;
 boolean bCycles;
 char* Networks;
+boolean bPUT = true;
 
 //********************************************************************************
 void wifiSetup(unsigned int BAUD) {
@@ -201,9 +203,14 @@ void wifiLoop(){
           }else{
            if(millis()>time){
              Serial.println(F("Making Server Call"));
-             basicAuthConnect("PUT","sensor_logs", true);
-             //basicAuthConnect("GET","refresh_status", false);
-             time = millis()+36000;
+             if(bPUT){
+                  basicAuthConnect("PUT","sensor_logs", true);
+                  bPUT=false;
+             }else{
+                  basicAuthConnect("GET","refresh_status", false);
+                  bPUT=true;
+             }
+             time = millis()+pollDelay;
            }
             
           }
@@ -215,8 +222,14 @@ void wifiLoop(){
           }else{
            if(millis()>time){
              Serial.println(F("Making Server Call"));
-             basicAuthConnect("GET","refresh_status", false);
-             time = millis()+36000;
+             if(bPUT){
+                  basicAuthConnect("PUT","sensor_logs", true);
+                  bPUT=false;
+             }else{
+                  basicAuthConnect("GET","refresh_status", false);
+                  bPUT=true;
+             }
+             time = millis()+pollDelay;
            }
           }
         break;
@@ -239,7 +252,7 @@ void wifiAssocRequestHandler(){
             if (wifi.match(F("Set-Cookie"))){ Serial.print(F("Set-Cookie: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
             if (wifi.match(F("X-Bpn-Resourcename:"))){
               Serial.print(F("X-Bpn-Resourcename: ")); wifi.gets(data, sizeof(data)); Serial.println(data);
-              String _pr = data;
+              String _pr = data; // our page resource from the server
               _pr.trim();
               //check which resource has come through
               if (_pr=="cycles") {
@@ -263,6 +276,13 @@ void wifiAssocRequestHandler(){
                 //action item on REFRESH & OVERRIDES information
                 if (wifi.match(F("REFRESH="))){Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);}
                 if (wifi.match(F("OVERRIDES="))){Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);}
+              }else if(_pr=="sensor_logs"){
+                if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                if (wifi.match(F("Connection:"))){Serial.print(F("Connection: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
+                wifi.gets(data, sizeof(data));
+                Serial.println(data);
+                wifi.gets(data, sizeof(data));
+                Serial.println(data);
               }
          }    
       } else if(strncmp_P(buf,PSTR("HTTP/1.1 401 Unauthorized"),23)==0 ){
