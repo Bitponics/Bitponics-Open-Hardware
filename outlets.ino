@@ -1,4 +1,6 @@
 #define OUTLETNUM 2 //number of outlets
+#include <EEPROM.h>
+
 
 Cycle outlet[OUTLETNUM];
 OutletStatus outletState[OUTLETNUM]; 
@@ -7,6 +9,32 @@ boolean bCyclesStored = false;
 unsigned long checkTime = 3600;
 unsigned long checkLimit = 7400;
 
+/* *****************************  */
+void setupEEPROM(){
+ 
+  for(int i = 0; i < OUTLETNUM; i++){
+    byte val = EEPROM.read(i);
+    digitalWrite(relayPin[i],val);
+    
+  }
+  
+}
+/* *****************************  */
+void resetBoard(){
+  Serial.println("Saving To EEPROM");
+  for(int i = 0; i < OUTLETNUM; i++){
+    byte val = outletState[i].val;
+    Serial.print("Saving Val ");
+    Serial.print(val);
+    Serial.print(" Address ");
+    Serial.println(i);
+    EEPROM.write(i, val);
+  }
+  delay(100);
+  Serial.println("RESETTING");
+  digitalWrite(RESET, LOW);
+}
+/* *****************************  */
 void setupRelayPins(){
   for(int i = 0; i<OUTLETNUM; i++){
     pinMode(relayPin[i], OUTPUT);
@@ -26,11 +54,63 @@ boolean readCycles(char* _i){
   setupCycles();
   
 }
+
+void readOverride(char* _i){
+  
+  IncomingCycle split = parseIncoming(_i);
+  if(checkOverride(split.one)){
+    outlet[0] = parseCycle(split.one);
+    setupOverride(outlet[0].ID);
+    
+  }
+  if(checkOverride(split.two)){
+    
+    outlet[1] = parseCycle(split.two);
+    setupOverride(outlet[1].ID);
+  }
+  
+  
+}
+
 void cycleLoop(){
   if(checkLimit<millis()){
     checkCycles();
     checkLimit = millis()+checkTime;
   }
+}
+
+void setupOverride(int o){
+  int i = o - 1;
+  Serial.println();
+  Serial.println("Setting Up OverRide");
+  outletState[i].ID = outlet[i].ID;
+  outletState[i].pin = relayPin[i];
+  
+  if(outlet[i].live.val == outlet[i].rest.val){
+     //run infinitely 
+     outletState[i].dur=0;
+     outletState[i].val=outlet[i].live.val;
+     
+  }else{
+     //check where we are in the current cycle
+     unsigned long totalCycle = outlet[i].live.dur + outlet[i].rest.dur;
+     if(outlet[i].offset > outlet[i].live.dur ){
+       //then we are in the second cycle
+       //unsigned long totalCycleDurLeft =  totalCycle - outlet[i].offset; //get the millis() left
+       outletState[i].dur = totalCycle-(unsigned long)outlet[i].offset; //get the millis() left in our duration
+       outletState[i].val=outlet[i].rest.val;
+    }else{
+      //then we are in the first cycle  
+      outletState[i].dur = outlet[i].live.dur-outlet[i].offset;
+      outletState[i].val=outlet[i].live.val; 
+    }
+
+  }//endif infinite check
+  Serial.print("Writing Outlet: ");Serial.println(i);Serial.print(" Value: ");Serial.print(outletState[i].val);Serial.print(" Pin: ");Serial.println(outletState[i].pin);
+  
+  digitalWrite(outletState[i].pin, outletState[i].val);
+  outletState[i].endT = outletState[i].dur + millis();
+  
 }
 
 void setupCycles(){
@@ -120,6 +200,17 @@ Cycle parseCycle(String _cycle){
     _cycle.toCharArray(arr,sizeof(arr)); //put string in buffer 
     sscanf(arr,"%d,%d,%ld,%d,%ld,%d,%ld;", &t.ID, &t.override, &t.offset, &t.live.val, &t.live.dur, &t.rest.val, &t.rest.dur );//parse buffer
     return t;
+}
+
+/*custom cycle object stores current grow cycle*/
+boolean checkOverride(String _cycle){
+    Cycle t;
+    char arr[_cycle.length()]; //create buffer 
+    _cycle.toCharArray(arr,sizeof(arr)); //put string in buffer 
+    sscanf(arr,"%d,%d,%ld,%d,%ld,%d,%ld;", &t.ID, &t.override, &t.offset, &t.live.val, &t.live.dur, &t.rest.val, &t.rest.dur );//parse buffer
+    if(t.override == 0) return true; 
+    else return false;
+
 }
 
 //print cycle data to ensure success
