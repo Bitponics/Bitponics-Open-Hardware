@@ -1,3 +1,4 @@
+#include <TSL2561.h>
 #define LUX_SDA 20
 #define LUX_SCL 21
 

@@ -37,14 +37,18 @@ char data[200];
 char opt[20];
 boolean bwifiSet;
 /* time stuff */
-unsigned long time_sensor = 36000;
-unsigned long time_status = 36000;
-unsigned long sensorPutDelay = 36000;
+unsigned long time_sensor = 0;
+unsigned long time_status = 0;
+unsigned long sensorPutDelay = 300000;
+unsigned long statusPutDelay = 0;
 boolean bCycles;
 char* Networks;
 boolean bReceivedStatus = true;
 boolean bReceivedSensor = true;
 boolean bReceivedCycles = true;
+unsigned long receiveTimeout;
+unsigned long receiveWait = 36000;
+unsigned long requestCount = 0;
 
 //********************************************************************************
 void wifiSetup(unsigned int BAUD) {
@@ -215,20 +219,8 @@ void wifiLoop(){
              if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
                bReceivedStatus = false;
                basicAuthConnect("GET","refresh_status", false);
-               time_status = millis();
+               time_status = millis()+statusPutDelay;
              }
-            
-//           if(millis()>time){
-//             Serial.println(F("Making Server Call"));
-//             if(bPUT){
-//                  basicAuthConnect("PUT","sensor_logs", true);
-//                  bPUT=false;
-//             }else{
-//                  basicAuthConnect("GET","refresh_status", false);
-//                  bPUT=true;
-//             }
-//             time = millis()+pollDelay;
-//           }
             
           }
         break;
@@ -237,6 +229,7 @@ void wifiLoop(){
           if (wifi.available() > 0) {
               wifiAssocRequestHandler();
           }else{
+             if(millis()> receiveTimeout){ bReceivedStatus = true; bReceivedSensor = true; bReceivedCycles = true; }
             
              if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
               bReceivedSensor = false;
@@ -247,19 +240,9 @@ void wifiLoop(){
              if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
                bReceivedStatus = false;
                basicAuthConnect("GET","refresh_status", false);
-               time_status = millis();
+               time_status = millis()+statusPutDelay;
              }
-//           if(millis()>time){
-//             Serial.println(F("Making Server Call"));
-//             if(bPUT){
-//                  basicAuthConnect("PUT","sensor_logs", true);
-//                  bPUT=false;
-//             }else{
-//                  basicAuthConnect("GET","refresh_status", false);
-//                  bPUT=true;
-//             }
-//             time = millis()+pollDelay;
-//           }
+
           }
         break;
 //      default:
@@ -275,6 +258,7 @@ void wifiLoop(){
 void wifiAssocRequestHandler(){
   
     if (wifi.gets(buf, sizeof(buf))) {
+      Serial.println(F("RECIEVED: "));
       if(strncmp_P(buf, PSTR("HTTP/1.1 200 OK"), 15) == 0){
             Serial.println(F("HTTP/1.1 200 OK"));
             if (wifi.match(F("Content-Type:"))){ Serial.print(F("Content-Type: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
@@ -291,7 +275,11 @@ void wifiAssocRequestHandler(){
                 if (wifi.match(F("Connection:"))){Serial.print(F("Connection: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
                 wifi.gets(data, sizeof(data));
                 Serial.println(data);
-                if (wifi.match(F("CYCLES="))) {wifi.getsTerm(data, sizeof(data),'\a'); Serial.println(data); }
+                if (wifi.match(F("CYCLES="))) {
+                    wifi.getsTerm(data, sizeof(data),'\a'); Serial.println(data); 
+                    readCycles(data);
+                  }
+               
                 // pass the cycles to be stored
                 bReceivedCycles = true;
               }else if(_pr=="refresh_status"){
@@ -303,8 +291,22 @@ void wifiAssocRequestHandler(){
                 Serial.println(data);
                 //to do 
                 //action item on REFRESH & OVERRIDES information
-                if (wifi.match(F("REFRESH="))){Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);}
-                if (wifi.match(F("OVERRIDES="))){Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);}
+                if (wifi.match(F("REFRESH="))){
+                   Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);
+                   String r = data;
+                   r.trim();
+                   if(r == "1"){
+                     if (wifi.match(F("OVERRIDES="))){ 
+                        Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);
+                        readCycles(data);
+                       }
+                   }else{
+                     while (wifi.gets(buf, sizeof(buf)) > 0) {
+		         /* Skip rest of content */
+		     }
+                   }
+                }
+
                 bReceivedStatus = true;
                 
               }else if(_pr=="sensor_logs"){
@@ -319,15 +321,17 @@ void wifiAssocRequestHandler(){
         Serial.println("HTTP/1.1 401 Unauthorized");
         wifi.gets(buf, sizeof(buf));
         Serial.println(buf);
-        
+        bReceivedStatus = true;
       } else {
        Serial.println(buf);
        wifi.gets(buf, sizeof(buf));
        Serial.println(buf);
-        
+       bReceivedStatus = true;
       }
       
     }
+    if(wifi.isConnected()) wifi.close();
+    
 }
 
 //********************************************************************************
@@ -465,14 +469,10 @@ void wifiConnect(char *ssid, char *pass, char *mode){
 }
 //********************************************************************************
 //********************************************************************************
-/**
-
-  TODO: MAKE DATA CALLS HERE AND FORMULATE JSON STRING
-
-*/
 char* makeJson(char* b, int s){
     // will take variables in addition to a buffer and create a data string for the server.
-    
+    Serial.println("Taking Readings and Making JSON");
+    Serial.println();
     String json = "{\"air\":";
     tempChar(getAirTemp(), opt);
     String air = opt;
@@ -553,6 +553,10 @@ void printHash(uint8_t* hash) {
     
 */
 boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){
+  requestCount++;
+  Serial.println();
+  Serial.print("Request Count ");Serial.println(requestCount);
+  Serial.println();
   uint8_t* hash;
   uint32_t a;
   char *mac = wifi.getMAC(opt, sizeof(opt));
@@ -601,9 +605,11 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){
     wifi.println(); //end header
     if(_bGetData) wifi.sendChunk(json);
     wifi.sendChunkln(); //end body
+    receiveTimeout= millis() + receiveWait;
     return true;
    }else{
     Serial.println("Failed to connect");
+    bReceivedStatus = true; bReceivedSensor = true; bReceivedCycles = true;
     return false;
    }
  

@@ -22,8 +22,16 @@ DHT dht(DHTPIN, DHTTYPE);
 
 void setup_temps(){
   
-  water.begin();
   dht.begin();
+  float t = dht.readTemperature();
+  if(isnan(t)) {/*reboot;*/}
+  Serial.print("Air Temp: "); Serial.println(t);
+  float h = dht.readHumidity();
+  if(isnan(h)) {/*rebooot ;*/}
+  Serial.print("Humidity: "); Serial.println(h);
+  
+  water.begin();
+
   Serial.print("Temperature Init...");
   Serial.print("Found ");
   Serial.print(water.getDeviceCount(), HEX);
