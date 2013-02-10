@@ -1,0 +1,3 @@
+[submodule "WiFlyHQ"]
+	path = WiFlyHQ
+	url = git@github.com:Bitponics/WiFlyHQ.git
