@@ -9,27 +9,26 @@ void loadServerKeys(){
 }
 
 //********************************************************************************
-void wifiAssociated(){
+void associateWifi(){
 
   if (!wifi.isAssociated()){
-	wifi.enableDHCP();
-        
-        Serial.print(F("DeviceID: "));
-        Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
-        Serial.print(F("SSID: "));
-        Serial.println(wifi.getSSID(buf, sizeof(buf)));
-        
-	if (wifi.join()) {
-	    Serial.println("Joined wifi network");
-	} else {
-	    Serial.println("Failed to join wifi network");
-	    wifiAdhoc();
-	}
-  }else {
-    Serial.println(F("Device is associated."));
+    wifi.enableDHCP();
 
-  }
-  
+    Serial.print(F("DeviceID: "));
+    Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
+    Serial.print(F("SSID: "));
+    Serial.println(wifi.getSSID(buf, sizeof(buf)));
+
+    if (wifi.join()) {
+     Serial.println("Joined wifi network");
+   } else {
+     Serial.println("Failed to join wifi network");
+     return false;
+   }
+ } else {
+  Serial.println(F("Device is associated."));
+}
+return true;
 }
 
 //********************************************************************************

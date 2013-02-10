@@ -82,22 +82,21 @@ void wifiSetup(unsigned int BAUD) {
   if(d.indexOf("WEPClient")>0) WIFI_STATE = WIFI_WEP;
   wifi.setProtocol(WIFLY_PROTOCOL_TCP);
   switch(WIFI_STATE){
-    
     case(WIFI_UNSET):
         wifiAdhoc();
-
     break;
  
     default:
         loadServerKeys();
-        wifiAssociated();
-        setup_sensors(38400); ///eventually will need to set up all sensors
-        basicAuthConnect("GET","cycles", false);
-        bReceivedCycles = false;
+        if (associateWifi()){
+          setup_sensors(38400); ///eventually will need to set up all sensors
+          basicAuthConnect("GET","cycles", false);
+          bReceivedCycles = false;
+        } else {
+          wifiAdhoc();
+        }
     break;
-    
   }
-     
 }
 
 //********************************************************************************
