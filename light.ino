@@ -1,4 +1,4 @@
-#include <lib/TSL2561/TSL2561.h>
+#include <TSL2561.h>
 #define LUX_SDA 20
 #define LUX_SCL 21
 

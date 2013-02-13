@@ -1,8 +1,8 @@
 /*-------------------------------------------*
               ONE WIRE
 *-------------------------------------------*/
-#include <lib/OneWire/OneWire.h>
-#include <lib/DallasTemperature/DallasTemperature.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 #define ONE_WIRE_BUS 22 //pin
 #define TEMPERATURE_PRECISION 12
@@ -14,7 +14,7 @@ DeviceAddress water_temp;
 /*-------------------------------------------*
             DTH-22 TEMP/HUM
 *-------------------------------------------*/
-#include <lib/DHT-sensor-library/DHT.h>
+#include "DHT.h"
 #define DHTPIN 23     // pin
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 
