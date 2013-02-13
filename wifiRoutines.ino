@@ -9,26 +9,27 @@ void loadServerKeys(){
 }
 
 //********************************************************************************
-void associateWifi(){
+void wifiAssociated(){
 
   if (!wifi.isAssociated()){
-    wifi.enableDHCP();
+  wifi.enableDHCP();
+        
+        Serial.print(F("DeviceID: "));
+        Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
+        Serial.print(F("SSID: "));
+        Serial.println(wifi.getSSID(buf, sizeof(buf)));
+        
+  if (wifi.join()) {
+      Serial.println("Joined wifi network");
+  } else {
+      Serial.println("Failed to join wifi network");
+      wifiAdhoc();
+  }
+  }else {
+    Serial.println(F("Device is associated."));
 
-    Serial.print(F("DeviceID: "));
-    Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
-    Serial.print(F("SSID: "));
-    Serial.println(wifi.getSSID(buf, sizeof(buf)));
-
-    if (wifi.join()) {
-     Serial.println("Joined wifi network");
-   } else {
-     Serial.println("Failed to join wifi network");
-     return false;
-   }
- } else {
-  Serial.println(F("Device is associated."));
-}
-return true;
+  }
+  
 }
 
 //********************************************************************************
@@ -71,11 +72,11 @@ void wifiAdhoc(){
      
     if (wifi.getPort() != 80) {
         wifi.setPort(80);
-	/* local port does not take effect until the WiFly has rebooted (2.32) */
-	wifi.save();
-	Serial.println(F("Set port to 80, rebooting to make it work"));
-	wifi.reboot();
-	delay(3000);
+  /* local port does not take effect until the WiFly has rebooted (2.32) */
+  wifi.save();
+  Serial.println(F("Set port to 80, rebooting to make it work"));
+  wifi.reboot();
+  delay(3000);
     }
     
     Serial.println("Adhoc Ready");

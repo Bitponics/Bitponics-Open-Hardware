@@ -10,8 +10,8 @@
 #define WIFI_WPA    1
 #define WIFI_WEP    2
 
-#include <WiFlyHQ.h>
-#include "sha256.h"
+#include <lib/WiFlyHQ/WiFlyHQ.h>
+#include <lib/Cryptosuite/Sha/sha256.h>
 #include "customDataTypes.h"
 
 WiFly wifi;
@@ -82,21 +82,22 @@ void wifiSetup(unsigned int BAUD) {
   if(d.indexOf("WEPClient")>0) WIFI_STATE = WIFI_WEP;
   wifi.setProtocol(WIFLY_PROTOCOL_TCP);
   switch(WIFI_STATE){
+    
     case(WIFI_UNSET):
         wifiAdhoc();
+
     break;
  
     default:
         loadServerKeys();
-        if (associateWifi()){
-          setup_sensors(38400); ///eventually will need to set up all sensors
-          basicAuthConnect("GET","cycles", false);
-          bReceivedCycles = false;
-        } else {
-          wifiAdhoc();
-        }
+        wifiAssociated();
+        setup_sensors(38400); ///eventually will need to set up all sensors
+        basicAuthConnect("GET","cycles", false);
+        bReceivedCycles = false;
     break;
+    
   }
+     
 }
 
 //********************************************************************************
@@ -166,6 +167,5 @@ void wifiLoop(){
         
       }//end wifi switch
 }
-
 
 
