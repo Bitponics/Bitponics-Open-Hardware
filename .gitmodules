@@ -1,3 +1,9 @@
-[submodule "WiFlyHQ"]
-	path = WiFlyHQ
+[submodule "lib/WiFlyHQ"]
+	path = lib/WiFlyHQ
 	url = git@github.com:Bitponics/WiFlyHQ.git
+[submodule "lib/Cryptosuite"]
+	path = lib/Cryptosuite
+	url = https://github.com/Cathedrow/Cryptosuite.git
+[submodule "lib/DHT-sensor-library"]
+	path = lib/DHT-sensor-library
+	url = git@github.com:adafruit/DHT-sensor-library.git
