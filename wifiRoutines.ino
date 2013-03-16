@@ -35,11 +35,12 @@ return true;
 void scanNetworks(){
    Serial.println(F("//////////////////////////////////////////////////////////////////"));
    Serial.println(F("Setting up Scan Mode..."));
-   wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
-   Serial.println(F("Getting Networks"));
-   int networks = wifi.getNumNetworks(buf,sizeof(buf)) ;
-   Serial.print(F("Networks in Range: "));
-   Serial.println(networks);
+   // Are two scans nessisary?
+//   wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
+//   Serial.println(F("Getting Networks"));
+//   int networks = wifi.getNumNetworks(buf,sizeof(buf)) ;
+//   Serial.print(F("Networks in Range: "));
+//   Serial.println(networks);
    //Serial.println(buf);
    Networks = wifi.getScanNew(data, sizeof(data), true);
    Serial.println(Networks);
@@ -47,16 +48,17 @@ void scanNetworks(){
 }
 
 //********************************************************************************
-void wifiAdhoc(){
+void wifiAp(){
       WIFI_STATE=WIFI_UNSET;
       scanNetworks();
-      Serial.println(F("Setting up Adhoc Mode..."));
+      Serial.println(F("Setting up AP Mode..."));
       bwifiSet = false;
-      wifi.setAuth(WIFLY_WLAN_AUTH_OPEN);
-      wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
-      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
       
-      if(wifi.createAdhocNetwork(mySSID, 1)){
+//      wifi.setAuth(WIFLY_WLAN_AUTH_OPEN);
+//      wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
+//      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
+      
+      if(wifi.createApNetwork(mySSID, 1)){
         Serial.println(F("Adhoc Created"));
         Serial.print(F("MAC: "));
         Serial.println(wifi.getMAC(buf, sizeof(buf)));
@@ -65,7 +67,7 @@ void wifiAdhoc(){
       
       } else {
         
-        Serial.print(F("Adhoc Failed"));
+        Serial.print(F("AP Failed"));
         //reboot
      }
      
@@ -78,7 +80,7 @@ void wifiAdhoc(){
 	delay(3000);
     }
     
-    Serial.println("Adhoc Ready");
+    Serial.println("AP Ready");
    
 }
 

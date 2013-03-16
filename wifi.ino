@@ -27,7 +27,7 @@ char MAC[20];
 byte WIFI_STATE;
 
 void wifiSetup(unsigned int BAUD);
-void wifiAdhocRequestHandler();
+void wifiApRequestHandler();
 void wifiConnect(char *ssid, char *pass, char *mode);
 boolean wifiConnection();
 void wifiLoop();
@@ -77,13 +77,13 @@ void wifiSetup(unsigned int BAUD) {
   Serial.println(d);
   
   if(d.indexOf("WiFly-GSX")>0) WIFI_STATE = WIFI_UNSET;
-  if(d.indexOf("AdhocServer")>0) WIFI_STATE = WIFI_UNSET;
+  if(d.indexOf("ApServer")>0) WIFI_STATE = WIFI_UNSET;
   if(d.indexOf("WPAClient")>0) WIFI_STATE = WIFI_WPA;
   if(d.indexOf("WEPClient")>0) WIFI_STATE = WIFI_WEP;
   wifi.setProtocol(WIFLY_PROTOCOL_TCP);
   switch(WIFI_STATE){
     case(WIFI_UNSET):
-        wifiAdhoc();
+        wifiAp();
     break;
  
     default:
@@ -93,7 +93,7 @@ void wifiSetup(unsigned int BAUD) {
           basicAuthConnect("GET","cycles", false);
           bReceivedCycles = false;
         } else {
-          wifiAdhoc();
+          wifiAp();
         }
     break;
   }
@@ -109,7 +109,7 @@ void wifiLoop(){
         case(WIFI_UNSET):
         
          if (wifi.available() > 0) {
-          wifiAdhocRequestHandler();
+          wifiApRequestHandler();
           
          }
 

@@ -81,7 +81,7 @@ void wifiAssocRequestHandler(){
 
 //********************************************************************************
 //********************************************************************************
-void wifiAdhocRequestHandler(){
+void wifiApRequestHandler(){
  
 /* See if there is a request */
 	if (wifi.gets(buf, sizeof(buf))) {
