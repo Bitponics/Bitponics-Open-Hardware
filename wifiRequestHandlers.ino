@@ -85,7 +85,7 @@ void wifiApRequestHandler(){
  
 /* See if there is a request */
 	if (wifi.gets(buf, sizeof(buf))) {
-	    if (strncmp_P(buf, PSTR("GET / "), 6) == 0) {
+  	   if (strncmp_P(buf, PSTR("GET"), 6) == 0) {
 		/* GET request */
 		Serial.println(F("Got GET request"));
 		while (wifi.gets(buf, sizeof(buf)) > 0) {
@@ -93,7 +93,7 @@ void wifiApRequestHandler(){
 		}
 		//sendIndex();
                 sendInitialJSON(); 
-		Serial.println(F("Sent JSON "));
+		Serial.println(F("Sent JSON "));  
 	    } else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
 	        /* Form POST */
 	        char ssid[32];

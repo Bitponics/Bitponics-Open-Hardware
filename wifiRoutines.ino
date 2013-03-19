@@ -35,14 +35,14 @@ return true;
 void scanNetworks(){
    Serial.println(F("//////////////////////////////////////////////////////////////////"));
    Serial.println(F("Setting up Scan Mode..."));
-   // Are two scans nessisary?
-//   wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
-//   Serial.println(F("Getting Networks"));
-//   int networks = wifi.getNumNetworks(buf,sizeof(buf)) ;
-//   Serial.print(F("Networks in Range: "));
-//   Serial.println(networks);
-   //Serial.println(buf);
    Networks = wifi.getScanNew(data, sizeof(data), true);
+   
+   //if String networks has only [] find networks
+   while(strlen(Networks)<3){
+     Serial.println("No Networks Found. Checking Networks Again.");
+     Networks = wifi.getScanNew(data, sizeof(data), true);
+   }
+   
    Serial.println(Networks);
    Serial.println(F("//////////////////////////////////////////////////////////////////"));
 }
@@ -58,7 +58,7 @@ void wifiAp(){
 //      wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
 //      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
       
-      if(wifi.createApNetwork(mySSID, 1)){
+      if(wifi.createAPNetwork(mySSID, 1)){
         Serial.println(F("Adhoc Created"));
         Serial.print(F("MAC: "));
         Serial.println(wifi.getMAC(buf, sizeof(buf)));
@@ -80,7 +80,7 @@ void wifiAp(){
 	delay(3000);
     }
     
-    Serial.println("AP Ready");
+    Serial.println(F("AP Ready"));
    
 }
 
@@ -217,7 +217,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
   }else {
     Serial.println(F("Connection Failed"));
     WIFI_STATE = WIFI_UNSET;
-    wifiAdhoc(); //set Reset Adhoc Mode
+    wifiAp(); //set Reset Adhoc Mode
   }
 
 }
