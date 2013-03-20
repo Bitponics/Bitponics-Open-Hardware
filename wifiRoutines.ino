@@ -73,7 +73,7 @@ void wifiAp(){
      
     if (wifi.getPort() != 80) {
         wifi.setPort(80);
-	/* local port does not take effect until the WiFly has rebooted (2.32) */
+	/* local port does not take effect until the WiFly has rebooted (2.32+) */
 	wifi.save();
 	Serial.println(F("Set port to 80, rebooting to make it work"));
 	wifi.reboot();

@@ -85,17 +85,50 @@ void wifiApRequestHandler(){
  
 /* See if there is a request */
 	if (wifi.gets(buf, sizeof(buf))) {
-  	   if (strncmp_P(buf, PSTR("GET"), 6) == 0) {
-		/* GET request */
-		Serial.println(F("Got GET request"));
-		while (wifi.gets(buf, sizeof(buf)) > 0) {
-		      /* Skip rest of request */
-		}
-		//sendIndex();
-                sendInitialJSON(); 
-		Serial.println(F("Sent JSON "));  
-	    } else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
-	        /* Form POST */
+  	   if (strncmp_P(buf, PSTR("GET"), 8) == 0) {
+                  apGetResponse(); 
+	    }else if (strncmp_P(buf, PSTR("OPEN*GET"), 4) == 0) {
+                  apGetResponse();
+	    }else if (strncmp_P(buf, PSTR("*OPEN*GET"), 4) == 0) {
+                  apGetResponse();
+	    }  
+	    }else if (strncmp_P(buf, PSTR("PEN*GET"), 4) == 0) {
+                  apGetResponse();
+	    }  
+            else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
+              apPostResponse();
+
+            }else if (strncmp_P(buf, PSTR("OPEN*POST"), 4) == 0) {
+              apPostResponse();
+
+            } else if (strncmp_P(buf, PSTR("PEN*POST"), 4) == 0) {
+              apPostResponse();
+
+            } 
+            else if (strncmp_P(buf, PSTR("*OPEN*POST"), 4) == 0) {
+              apPostResponse();
+
+            } 
+  
+    }
+
+void apGetResponse(){
+
+    Serial.println(F("Got GET request"));
+    while (wifi.gets(buf, sizeof(buf)) > 0) {	      
+    /* Skip rest of request */
+    Serial.println(buf);
+        	}
+        		//sendIndex();
+    sendInitialJSON();
+    Serial.println(F("Sent JSON ")); 
+
+}
+
+
+void apPostResponse(){
+  
+  	        /* Form POST */
 	        char ssid[32];
                 char pass[32];
                 char mode[16];
@@ -141,6 +174,5 @@ void wifiApRequestHandler(){
 		Serial.println(F("Sending 404"));
 		//send404();
 	    }
-	} 
-  
+
 }

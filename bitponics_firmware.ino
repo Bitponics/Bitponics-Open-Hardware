@@ -8,7 +8,7 @@
 unsigned long reset_time = 1200000; //20 minutes for reset
 
 void setup() {
-  
+  //pinMode( );
   digitalWrite(WIFI_RESET, HIGH);
   digitalWrite(RESET, HIGH);
   pinMode(RESET, OUTPUT);
@@ -18,6 +18,7 @@ void setup() {
      BAUDS for scan to work */
   Serial.begin(115200); 
   wifiSetup(9600);
+  
 }
 
 void loop(){
