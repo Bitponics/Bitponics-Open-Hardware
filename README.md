@@ -6,7 +6,7 @@ bitponics_firmware
 - In Terminal: 
     git submodule init
     git submodule update
-- Copy all directories from `./lib` into your Arduino's global `libraries` folder.
+- Copy all directories from `./libraries` into your Arduino's global `libraries` folder. (Usually ~/Documents/Arduino/libraries)
 - Arduino App: 
     - Menu Settings:
         - "Tools/Board" = "Arduino Mega 2560"
