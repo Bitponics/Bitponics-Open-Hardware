@@ -87,30 +87,37 @@ void wifiApRequestHandler(){
 	if (wifi.gets(buf, sizeof(buf))) {
   	   if (strncmp_P(buf, PSTR("GET"), 8) == 0) {
                   apGetResponse(); 
-	    }else if (strncmp_P(buf, PSTR("OPEN*GET"), 4) == 0) {
+	    }else if (strncmp_P(buf, PSTR("OPEN*GET"), 8) == 0) {
                   apGetResponse();
-	    }else if (strncmp_P(buf, PSTR("*OPEN*GET"), 4) == 0) {
+	    }else if (strncmp_P(buf, PSTR("*OPEN*GET"), 9) == 0) {
+                  apGetResponse();
+	    }else if (strncmp_P(buf, PSTR("PEN*GET"), 7) == 0) {
                   apGetResponse();
 	    }  
-	    }else if (strncmp_P(buf, PSTR("PEN*GET"), 4) == 0) {
-                  apGetResponse();
-	    }  
-            else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
+            else if (strncmp_P(buf, PSTR("POST"), 8) == 0) {
               apPostResponse();
 
-            }else if (strncmp_P(buf, PSTR("OPEN*POST"), 4) == 0) {
+            }else if (strncmp_P(buf, PSTR("OPEN*POST"), 10) == 0) {
               apPostResponse();
 
-            } else if (strncmp_P(buf, PSTR("PEN*POST"), 4) == 0) {
+            } else if (strncmp_P(buf, PSTR("PEN*POST"), 10) == 0) {
               apPostResponse();
 
             } 
-            else if (strncmp_P(buf, PSTR("*OPEN*POST"), 4) == 0) {
+            else if (strncmp_P(buf, PSTR("*OPEN*POST"), 10) == 0) {
               apPostResponse();
 
-            } 
+            }else {
+	        /* Unexpected request */
+		Serial.print(F("Unexpected Request : "));
+		Serial.println(buf);
+		wifi.flushRx();		// discard rest of input
+		Serial.println(F("Sending 404"));
+		//send404();
+	    } 
   
     }
+}
 
 void apGetResponse(){
 
@@ -166,13 +173,6 @@ void apPostResponse(){
 		Serial.println(F("Sent greeting page"));
                 wifiConnect(ssid, pass, mode);
 		
-	    } else {
-	        /* Unexpected request */
-		Serial.print(F("Unexpected Request : "));
-		Serial.println(buf);
-		wifi.flushRx();		// discard rest of input
-		Serial.println(F("Sending 404"));
-		//send404();
-	    }
+	    
 
 }
