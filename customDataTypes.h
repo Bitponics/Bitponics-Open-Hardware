@@ -39,11 +39,5 @@ struct EC{
   
 };
 
-struct  Light {
-    
-  uint32_t lum, lux;
-  uint16_t ir, full, vis;
-  
-};
 
 #endif;

@@ -242,13 +242,9 @@ char* makeJson(char* b, int s){
     String hum = opt;
     json+=hum;
     //Serial.print("humidity: ");Serial.println(hum);
-    Light light = getLight();
-    json+= ",\"ir\":";
-    json+= light.ir;
-    json+= ",\"full\":";
-    json+= light.full;
+    
     json+= ",\"lux\":";
-    json+= light.lux;
+    json+= tempChar(getLight(),opt);;
     
     EC ec = getEc(getWaterTemp());
     

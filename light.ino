@@ -1,49 +1,39 @@
-#include <TSL2561.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_TSL2561.h>
 #define LUX_SDA 20
 #define LUX_SCL 21
 
 // via __ Adafruit Example for demonstrating the TSL2561 library - public domain!
 
-TSL2561 tsl(TSL2561_ADDR_FLOAT); 
+Adafruit_TSL2561 tsl = Adafruit_TSL2561(TSL2561_ADDR_FLOAT, 12345);
 
 //-------------------------------------------------------
 void setup_light(){
-  
-  if (tsl.begin()) Serial.print("Light Sensor Ready...");
-  //else _reset();
-  delay(100);
-  tsl.setGain(TSL2561_GAIN_16X);
-  tsl.setTiming(TSL2561_INTEGRATIONTIME_13MS);
-  
+
+  if(!tsl.begin()){
+    /* There was a problem detecting the ADXL345 ... check your connections */
+    Serial.print("no Lux sensor detected");
+    while(1);
+  }
+  else Serial.print("Light Sensor Ready...");
+
+  tsl.enableAutoGain(true);          /* Auto-gain ... switches automatically between 1x and 16x */
+  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);      /* fast but low resolution */
+
 }
 
 //-------------------------------------------------------
-Light getLight(){
-  Light l;
+float getLight(){
+  /* Get a new sensor event */
+  sensors_event_t event;
+  tsl.getEvent(&event);
 
-  l.lum = tsl.getFullLuminosity();
-  l.ir = l.lum >> 16;
-  l.full = l.lum & 0xFFFF;
-  l.vis = l.full- l.ir;
-  l.lux = tsl.calculateLux(l.full, l.ir);
-  //printLight(l);
-  return l;
-    
+  if (event.light){
+    return char(event.light);
+  }
+  return 0;
+
 }
 //-------------------------------------------------------
-void printLight( Light _l ){
-  
-  Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-  Serial.print("Lum: ");Serial.print(_l.lum);   Serial.print("\t");
-  delay(100);
-  Serial.print("IR: "); Serial.print(_l.ir);   Serial.print("\t");
-  delay(100);
-  Serial.print("Full: "); Serial.print(_l.full);   Serial.print("\t");
-  delay(100);
-  Serial.print("Visible: "); Serial.print(_l.vis);   Serial.print("\t");
-  delay(100);
-  Serial.print("Lux: "); Serial.println(_l.lux);
-  delay(100); 
-  Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-  
-}
+
+
