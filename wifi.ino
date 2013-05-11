@@ -90,7 +90,7 @@ void wifiSetup(unsigned int BAUD) {
         loadServerKeys();
         if (associateWifi()){
           setup_sensors(38400); ///eventually will need to set up all sensors
-          basicAuthConnect("GET","cycles", false);
+          basicAuthConnect("GET","status", false);
           bReceivedCycles = false;
         } else {
           wifiAp();
@@ -115,31 +115,36 @@ void wifiLoop(){
 
         break;
         case(WIFI_WPA):
-        
+    
           if (wifi.available() > 0) {
             wifiAssocRequestHandler();
             //char ch = wifi.read();
             //Serial.write(ch);
             //if (ch == '\n') Serial.write('\r');
           }else{
-             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+            
+             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true ){
+                              Serial.println("----->>>>>>>>>>--------sensor update");
+
               bReceivedSensor = false;
-              basicAuthConnect("PUT","sensor_logs", true);
+              basicAuthConnect("POST","sensor-logs", true);
               time_sensor = millis()+sensorPutDelay; 
               printMem();
-             }
-             
-             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+             }      
+
+          if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true ){
+
                bReceivedStatus = false;
-               basicAuthConnect("GET","refresh_status", false);
+               basicAuthConnect("GET","status", false);
                time_status = millis()+statusPutDelay;
                printMem();
              }
+            // else Serial.println("-------------------------no sensor update");
             
           }
         break;
         case(WIFI_WEP):
-        
+          
           if (wifi.available() > 0) {
               wifiAssocRequestHandler();
           }else{
@@ -147,18 +152,17 @@ void wifiLoop(){
             
              if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
               bReceivedSensor = false;
-              basicAuthConnect("PUT","sensor_logs", true);
+              basicAuthConnect("POST","sensor-logs", true);
               time_sensor = millis()+sensorPutDelay;
               printMem();
              }
              
              if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
                bReceivedStatus = false;
-               basicAuthConnect("GET","refresh_status", false);
+               basicAuthConnect("GET","status", false);
                time_status = millis()+statusPutDelay;
                printMem();     
              }
-
           }
         break;
 //      default:

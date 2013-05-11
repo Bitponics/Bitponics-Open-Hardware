@@ -212,7 +212,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
     Serial.print("DeviceID: ");
     Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
    
-    basicAuthConnect("PUT","sensor_logs", true);
+    basicAuthConnect("PUT","sensor-logs", true);
     
   }else {
     Serial.println(F("Connection Failed"));

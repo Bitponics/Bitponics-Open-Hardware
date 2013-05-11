@@ -5,7 +5,7 @@ void wifiAssocRequestHandler(){
   
     if (wifi.gets(buf, sizeof(buf))) {
       Serial.println(F("RECIEVED: "));
-      if(strncmp_P(buf, PSTR("HTTP/1.1 200 OK"), 15) == 0){
+      if(strncmp_P(buf, PSTR("HTTP/1.1 200 OK"), 15) == 0 || strncmp_P(buf, PSTR("TP/1.1 200 OK"), 13) == 0){ // for some reason sometimes it reads "HT" early
             Serial.println(F("HTTP/1.1 200 OK"));
             if (wifi.match(F("Content-Type:"))){ Serial.print(F("Content-Type: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
             if (wifi.match(F("Set-Cookie"))){ Serial.print(F("Set-Cookie: "));wifi.getsTerm(data, sizeof(data),'\n'); Serial.println(data);}
@@ -14,7 +14,7 @@ void wifiAssocRequestHandler(){
               String _pr = data; // our page resource from the server
               _pr.trim();
               //check which resource has come through
-              if (_pr=="cycles") {
+              /*if (_pr=="cycles") {
                 
                 Serial.println(F("<------Received Cycles------>"));
                 if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
@@ -28,7 +28,8 @@ void wifiAssocRequestHandler(){
                
                 // pass the cycles to be stored
                 bReceivedCycles = true;
-              }else if(_pr=="refresh_status"){
+              }*/
+              if(_pr=="status"){
                 
                 Serial.println(F("<------Received Refresh Status------>"));
                 if (wifi.match(F("Content-Length:"))){Serial.print(F("Content-Length: ")); wifi.gets(data, sizeof(data)); Serial.println(data);}
@@ -37,12 +38,12 @@ void wifiAssocRequestHandler(){
                 Serial.println(data);
                 //to do 
                 //action item on REFRESH & OVERRIDES information
-                if (wifi.match(F("REFRESH="))){
-                   Serial.print(F("REFRESH="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);
+                if (wifi.match(F("CYCLES="))){
+                   Serial.print(F("CYCLES="));wifi.getsTerm(data, sizeof(data),'\n');Serial.println(data);
                    String r = data;
                    r.trim();
                    if(r == "1"){
-                      basicAuthConnect("GET","cycles", false);
+                      basicAuthConnect("GET","status", false);
                       bReceivedCycles = false;
                    }else{
                         if(wifi.match(F("OVERRIDES=")));Serial.print(F("OVERRIDES="));wifi.getsTerm(data, sizeof(data),'\a');Serial.println(data);
@@ -53,7 +54,9 @@ void wifiAssocRequestHandler(){
 
                 bReceivedStatus = true;
                 
-              }else if(_pr=="sensor_logs"){
+                Serial.println("end receive status");
+                
+              }else if(_pr=="sensor-logs"){
 
                   wifi.flushRx();		// discard rest of input
                   bReceivedSensor = true;
@@ -67,6 +70,7 @@ void wifiAssocRequestHandler(){
         Serial.println(buf);
         bReceivedStatus = true;
       } else {
+       Serial.println("Bad format: ");
        Serial.println(buf);
        wifi.gets(buf, sizeof(buf));
        Serial.println(buf);
@@ -75,7 +79,9 @@ void wifiAssocRequestHandler(){
       
     }
     delay(4000);
+    Serial.println("getting nothing");
     if(wifi.isConnected()) wifi.close();
+    wifi.flushRx();
     
 }
 
