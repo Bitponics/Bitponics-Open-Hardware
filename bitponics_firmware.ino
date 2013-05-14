@@ -14,8 +14,8 @@ void setup() {
   digitalWrite(WIFI_RESET, HIGH);
   digitalWrite(RESET, HIGH);
   pinMode(RESET, OUTPUT);
-  setupEEPROM();
-  setupRelayPins();
+ // setupEEPROM();
+  setupRelays();
   setupLedPins();
 
   pinMode(BUTTON, INPUT);
@@ -31,7 +31,7 @@ void setup() {
 void loop(){
 
   wifiLoop();
-  cycleLoop();
+ // cycleLoop();
   terminal();
   //if(millis()>reset_time) resetBoard();
 }
@@ -59,7 +59,8 @@ void terminal(){
 }
 
 void reset(){
-  wdt_enable(WDTO_500MS); 
+  //wdt_enable(WDTO_8S); 
+  wdt_enable(WDTO_30MS); 
   delay(1000);
 }
 

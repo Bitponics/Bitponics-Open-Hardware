@@ -31,7 +31,9 @@ void setup_ec(unsigned int DATABAUD){
  Serial3.print("L0\r");
  delay(1000);
  Serial3.print("L1\r");
-  
+ // Set EC to K 0.1
+ Serial3.print("P,1\r"); // set sensor type K
+ Serial3.flush();
 }
 
 //-----------------------------------------------------------------------------------------

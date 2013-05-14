@@ -227,27 +227,29 @@ char* makeJson(char* b, int s){
     // will take variables in addition to a buffer and create a data string for the server.
     Serial.println("Taking Readings and Making JSON");
     Serial.println();
-    String json = "{\"air\":";
+    
+    String json = "{\"sensors\":{\"lux\":";
+    json+= tempChar(getLight(),opt);
+    
+    json += ",\"air\":";
     tempChar(getAirTemp(), opt);
     String air = opt;
     json+=air;
     //Serial.print("air temp: ");Serial.println(air);
+    
     json+= ",\"water\":";
     tempChar(getWaterTemp(),opt);
     String water = opt;
     json+=water;
     //Serial.print("water temp: ");Serial.println(water);
+    
     json+=",\"hum\":";
     tempChar(getHumidity(),opt);
     String hum = opt;
     json+=hum;
     //Serial.print("humidity: ");Serial.println(hum);
     
-    json+= ",\"lux\":";
-    json+= tempChar(getLight(),opt);;
-    
     EC ec = getEc(getWaterTemp());
-    
     json+=",\"ec\":";
     json+=ec.conductivity;
     
@@ -256,7 +258,7 @@ char* makeJson(char* b, int s){
     json+=",\"ph\":";
     json+=ph;
     
-    json+="}";
+    json+="}}";
     Serial.println(json);
     json.toCharArray(b, s);
 

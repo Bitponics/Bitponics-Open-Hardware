@@ -37,10 +37,10 @@ char data[200];
 char opt[20];
 boolean bwifiSet;
 /* time stuff */
-unsigned long time_sensor = 0;
+//unsigned long time_sensor = 0;
 unsigned long time_status = 0;
-unsigned long sensorPutDelay = 300000;
-unsigned long statusPutDelay = 0;
+//unsigned long sensorPutDelay = 300000;
+unsigned long statusPutDelay = 5000;
 boolean bCycles;
 char* Networks;
 boolean bReceivedStatus = true;
@@ -65,16 +65,17 @@ void wifiSetup(unsigned int BAUD) {
   }
   
   Serial.print(F("DeviceID: "));
-  Serial.println(wifi.getDeviceID(buf, sizeof(buf)));
+  String d= wifi.getDeviceID(buf, sizeof(buf));
+  Serial.println(d);
   Serial.print(F("SSID: "));
   Serial.println(wifi.getSSID(buf, sizeof(buf)));
   
   /* Uncomment to Test AdHoc Network//Setup */
   //wifi.setDeviceID("WiFly-GSX");
   
-  Serial.print(F("DeviceID: "));
-  String d= wifi.getDeviceID(buf, sizeof(buf));
-  Serial.println(d);
+//  Serial.print(F("DeviceID: "));
+  
+//  Serial.println(d);
   
   if(d.indexOf("WiFly-GSX")>0) WIFI_STATE = WIFI_UNSET;
   if(d.indexOf("ApServer")>0) WIFI_STATE = WIFI_UNSET;
@@ -90,7 +91,7 @@ void wifiSetup(unsigned int BAUD) {
         loadServerKeys();
         if (associateWifi()){
           setup_sensors(38400); ///eventually will need to set up all sensors
-          basicAuthConnect("GET","status", false);
+          basicAuthConnect("POST","status", true);
           bReceivedCycles = false;
         } else {
           wifiAp();
@@ -123,48 +124,48 @@ void wifiLoop(){
             //if (ch == '\n') Serial.write('\r');
           }else{
             
-             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true ){
-                              Serial.println("----->>>>>>>>>>--------sensor update");
+//             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true ){
+//                              Serial.println("----->>>>>>>>>>--------sensor update");
+//
+//              bReceivedSensor = false;
+//              basicAuthConnect("POST","sensor-logs", true);
+//              time_sensor = millis()+sensorPutDelay; 
+//              printMem();
+//             }      
 
-              bReceivedSensor = false;
-              basicAuthConnect("POST","sensor-logs", true);
-              time_sensor = millis()+sensorPutDelay; 
-              printMem();
-             }      
-
-          if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true ){
+          if(millis()>time_status && bReceivedStatus == true){
 
                bReceivedStatus = false;
-               basicAuthConnect("GET","status", false);
+               basicAuthConnect("POST","status", true);
                time_status = millis()+statusPutDelay;
                printMem();
              }
-            // else Serial.println("-------------------------no sensor update");
+
             
           }
         break;
-        case(WIFI_WEP):
-          
-          if (wifi.available() > 0) {
-              wifiAssocRequestHandler();
-          }else{
-             if(millis()> receiveTimeout){ bReceivedStatus = true; bReceivedSensor = true; bReceivedCycles = true; }
-            
-             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
-              bReceivedSensor = false;
-              basicAuthConnect("POST","sensor-logs", true);
-              time_sensor = millis()+sensorPutDelay;
-              printMem();
-             }
-             
-             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
-               bReceivedStatus = false;
-               basicAuthConnect("GET","status", false);
-               time_status = millis()+statusPutDelay;
-               printMem();     
-             }
-          }
-        break;
+//        case(WIFI_WEP): // ******NEED TO UPDATE*********
+//          
+//          if (wifi.available() > 0) {
+//              wifiAssocRequestHandler();
+//          }else{
+//             if(millis()> receiveTimeout){ bReceivedStatus = true; bReceivedSensor = true; bReceivedCycles = true; }
+//            
+//             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+//              bReceivedSensor = false;
+//              basicAuthConnect("POST","sensor-logs", true);
+//              time_sensor = millis()+sensorPutDelay;
+//              printMem();
+//             }
+//             
+//             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
+//               bReceivedStatus = false;
+//               basicAuthConnect("GET","status", false);
+//               time_status = millis()+statusPutDelay;
+//               printMem();     
+//             }
+//          }
+//        break;
 //      default:
 //      break;
         
