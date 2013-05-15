@@ -40,62 +40,61 @@ boolean bwifiSet;
 //unsigned long time_sensor = 0;
 unsigned long time_status = 0;
 //unsigned long sensorPutDelay = 300000;
-unsigned long statusPutDelay = 5000;
-boolean bCycles;
+const unsigned long statusPutDelay = 5000;
 char* Networks;
-boolean bReceivedStatus = true;
-boolean bReceivedSensor = true;
-boolean bReceivedCycles = true;
+boolean bReceivedStatus = false;
 unsigned long receiveTimeout;
 unsigned long receiveWait = 36000;
 unsigned long requestCount = 0;
 
 //********************************************************************************
 void wifiSetup(unsigned int BAUD) {
-  
+
   Serial.println();
-  Serial.println(F("Starting"));
-  Serial.println(F("Free Memory: "));
+  Serial.println(F("<----------------------->"));
+  Serial.println(F("<------Device Boot------>"));
+  Serial.print(F("Free Memory: "));
   Serial.println(wifi.getFreeMemory(),DEC);
-  
+
   Serial1.begin(BAUD);
   if (!wifi.begin(&Serial1, &Serial)) {
-      Serial.println(F("Failed to start wifi"));
-      //terminal();
+    Serial.println(F("Failed to start wifi"));
+    //terminal();
   }
-  
+
+  Serial.print(F("SSID: "));
+  String ssid = wifi.getSSID(buf, sizeof(buf));
+  Serial.println(ssid);
+  if(ssid == "BITPONICS"){
+    Serial.println("Setting AP Mode");
+    wifi.setDeviceID("ApServer");
+  }
+
   Serial.print(F("DeviceID: "));
   String d= wifi.getDeviceID(buf, sizeof(buf));
   Serial.println(d);
-  Serial.print(F("SSID: "));
-  Serial.println(wifi.getSSID(buf, sizeof(buf)));
-  
-  /* Uncomment to Test AdHoc Network//Setup */
-  //wifi.setDeviceID("WiFly-GSX");
-  
-//  Serial.print(F("DeviceID: "));
-  
-//  Serial.println(d);
-  
+
   if(d.indexOf("WiFly-GSX")>0) WIFI_STATE = WIFI_UNSET;
   if(d.indexOf("ApServer")>0) WIFI_STATE = WIFI_UNSET;
   if(d.indexOf("WPAClient")>0) WIFI_STATE = WIFI_WPA;
   if(d.indexOf("WEPClient")>0) WIFI_STATE = WIFI_WEP;
-  wifi.setProtocol(WIFLY_PROTOCOL_TCP);
+  
+  wifi.setProtocol(WIFLY_PROTOCOL_TCP); // setup TCP protocol
+  
   switch(WIFI_STATE){
     case(WIFI_UNSET):
-        wifiAp();
+    wifiAp();
     break;
- 
-    default:
-        loadServerKeys();
-        if (associateWifi()){
-          setup_sensors(38400); ///eventually will need to set up all sensors
-          basicAuthConnect("POST","status", true);
-          bReceivedCycles = false;
-        } else {
-          wifiAp();
-        }
+
+  default:
+    loadServerKeys();
+    if (associateWifi()){
+      setup_sensors(38400);
+      basicAuthConnect("POST","status", true);
+    } 
+    else {
+      wifiAp();
+    }
     break;
   }
 }
@@ -103,74 +102,24 @@ void wifiSetup(unsigned int BAUD) {
 //********************************************************************************
 
 void wifiLoop(){
- 
-   
-      switch(WIFI_STATE){
-        
-        case(WIFI_UNSET):
-        
-         if (wifi.available() > 0) {
-          wifiApRequestHandler();
-          
-         }
 
-        break;
-        case(WIFI_WPA):
-    
-          if (wifi.available() > 0) {
-            wifiAssocRequestHandler();
-            //char ch = wifi.read();
-            //Serial.write(ch);
-            //if (ch == '\n') Serial.write('\r');
-          }else{
-            
-//             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true ){
-//                              Serial.println("----->>>>>>>>>>--------sensor update");
-//
-//              bReceivedSensor = false;
-//              basicAuthConnect("POST","sensor-logs", true);
-//              time_sensor = millis()+sensorPutDelay; 
-//              printMem();
-//             }      
-
-          if(millis()>time_status && bReceivedStatus == true){
-
-               bReceivedStatus = false;
-               basicAuthConnect("POST","status", true);
-               time_status = millis()+statusPutDelay;
-               printMem();
-             }
-
-            
-          }
-        break;
-//        case(WIFI_WEP): // ******NEED TO UPDATE*********
-//          
-//          if (wifi.available() > 0) {
-//              wifiAssocRequestHandler();
-//          }else{
-//             if(millis()> receiveTimeout){ bReceivedStatus = true; bReceivedSensor = true; bReceivedCycles = true; }
-//            
-//             if(millis()>time_sensor && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
-//              bReceivedSensor = false;
-//              basicAuthConnect("POST","sensor-logs", true);
-//              time_sensor = millis()+sensorPutDelay;
-//              printMem();
-//             }
-//             
-//             if(millis()>time_status && bReceivedStatus == true && bReceivedSensor == true && bReceivedCycles == true ){
-//               bReceivedStatus = false;
-//               basicAuthConnect("GET","status", false);
-//               time_status = millis()+statusPutDelay;
-//               printMem();     
-//             }
-//          }
-//        break;
-//      default:
-//      break;
-        
-      }//end wifi switch
+  if(WIFI_STATE == WIFI_UNSET){
+    if (wifi.available() > 0) {
+      wifiApRequestHandler();
+    }
+  }
+  if (WIFI_STATE == WIFI_WPA || WIFI_STATE == WIFI_WEP){
+    if (wifi.available() > 0) {  // check if anything in wifi buffer
+      wifiAssocRequestHandler(); // handle wifi data
+    }
+    else if(millis()>time_status && bReceivedStatus == true){ // if last request was completed and timer elapsed, make a request
+      Serial.println("<------Status POST------>");
+      bReceivedStatus = false; // reset status variable
+      basicAuthConnect("POST","status", true); // standard status update post
+      time_status = millis()+statusPutDelay; // reset POST timer
+      //printMem();
+    }
+  }
 }
-
 
 
