@@ -17,10 +17,10 @@
 WiFly wifi;
 
 const char mySSID[] = "BITPONICS";
-//const char site[] = "dev.bitponics.com";
-const char site[] = "bitponics-dev.herokuapp.com";
+const char site[] = "dev.bitponics.com";
+//const char site[] = "www.bitponics.com";
 
-//Key Chars must have one extra space for 
+//Key Chars must have one extra space for `
 char PKEY[17]; //Public Key Stored in Wifly FTP Pass
 char SKEY[17]; //Private/Secret Key Stored in Wifly FTP User
 char MAC[20];

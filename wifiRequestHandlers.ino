@@ -44,8 +44,11 @@ void wifiAssocRequestHandler(){
             Serial.println(data);
             String r = data;
             r.trim();
-            //switchRelay(0, r.charAt(2)-'0');
-            //switchRelay(1, r.charAt(6)-'0');
+            int relayState[2] = {int(r.charAt(0)-'0'), int(r.charAt(2)-'0')};
+            for(int i=0; i<2;i++){
+              if(relayState[i] != curRelayState[i]) switchRelay(i, relayState[i]);
+            }
+           
           }
           if(wifi.match(F("CALIB_MODE="))){
             Serial.print(F("CALIB_MODE="));
@@ -102,7 +105,7 @@ void wifiApRequestHandler(){
 
   /* See if there is a request */
   if (wifi.gets(buf, sizeof(buf))) {
-    if (strncmp_P(buf, PSTR("GET"), 8) == 0) {
+    if (strncmp_P(buf, PSTR("GET"), 3) == 0) {
       apGetResponse(); 
     }
     else if (strncmp_P(buf, PSTR("OPEN*GET"), 8) == 0) {
@@ -114,15 +117,15 @@ void wifiApRequestHandler(){
     else if (strncmp_P(buf, PSTR("PEN*GET"), 7) == 0) {
       apGetResponse();
     }  
-    else if (strncmp_P(buf, PSTR("POST"), 8) == 0) {
+    else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
       apPostResponse();
 
     }
-    else if (strncmp_P(buf, PSTR("OPEN*POST"), 10) == 0) {
+    else if (strncmp_P(buf, PSTR("OPEN*POST"), 9) == 0) {
       apPostResponse();
 
     } 
-    else if (strncmp_P(buf, PSTR("PEN*POST"), 10) == 0) {
+    else if (strncmp_P(buf, PSTR("PEN*POST"), 8) == 0) {
       apPostResponse();
 
     } 

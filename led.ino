@@ -1,29 +1,31 @@
-#define BLUE 10
-#define GREEN 11
-#define RED 12
+#define BLUE_PIN 10
+#define GREEN_PIN 11
+#define RED_PIN 12
 
 void setupLedPins(){
-  pinMode(RED, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-  pinMode(BLUE, OUTPUT); 
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT); 
 }
 
-const byte red[] = {
+const byte RED[] = {
   255, 0,0};
-const byte yellow[] = {
+const byte YELLOW[] = {
   255, 255,0};
-const byte blue[] = {
+const byte ORANGE[] = {
+  255,124,0};
+const byte BLUE[] = {
   0,0,255};
-const byte green[] = {
+const byte GREEN[] = {
   0,0,255};
-const byte purple[] = {
+const byte PURPLE[] = {
   255,0,255};
 
 
 void setColor(const byte rgb[]){
-  analogWrite(RED, rgb[0]);
-  analogWrite(GREEN, rgb[1]);
-  analogWrite(BLUE, rgb[2]);
+  analogWrite(RED_PIN, rgb[0]);
+  analogWrite(GREEN_PIN, rgb[1]);
+  analogWrite(RED_PIN, rgb[2]);
   delay(2000);
 }
 
