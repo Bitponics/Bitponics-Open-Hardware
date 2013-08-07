@@ -1,66 +1,81 @@
+#define SERIESRESISTOR 2000    
+#define SENSORPIN A6 
+float height;
+float range = 220;
+float minVal = 190;
+float maxHeight = 21;
+//boolean waterLevel = false;
+
 //-----------------------------------------------------------------------------------------
 //init ph by making sure we can communicate
-void setup_ph(unsigned int DATABAUD){
+void setupPh(unsigned int DATABAUD){
   
  Serial2.begin(DATABAUD);
  Serial2.setTimeout(6000);
- Serial2.print("L1\r");
- delay(1000);
- Serial2.print("L0\r");
- delay(1000);
- Serial2.print("L1\r");
+ Serial2.print(F("L0\r"));
+ delay(20);
+ Serial2.print(F("L0\r"));
+ delay(500);
+ //Serial2.print("L1\r");
+ Serial.println(F("- pH"));
  
 }
 //-----------------------------------------------------------------------------------------
 //function to ask for pH and return as float
-float getPh(float _c){
+void getPh(){
  //Serial.println("R\\r --> PH"); //let us know we are asking
- Serial2.print(_c);
- Serial2.write(13); //ask device
+ Serial.print(F("pH...          "));
+ Serial2.print(water);
+ Serial2.print(F("\r")); //ask device
  delay(500);
- return Serial2.parseFloat(); //return data as float
+ dtostrf(Serial2.parseFloat(),4,2,ph);
+ Serial.println(ph);
+// ph = Serial2.parseFloat();
+ //return Serial2.parseFloat(); //return data as float
 }
 
 //-----------------------------------------------------------------------------------------
-void setup_ec(unsigned int DATABAUD){
+void setupEc(unsigned int DATABAUD){
  
  Serial3.begin(DATABAUD);
  Serial3.setTimeout(6000);
- Serial3.print("L1\r");
- delay(1000);
- Serial3.print("L0\r");
- delay(1000);
- Serial3.print("L1\r");
+ Serial3.print(F("L1\r"));
+ delay(100);
+ Serial3.print(F("L0\r"));
+ delay(100);
+ //Serial3.print("L1\r");
  // Set EC to K 0.1
- Serial3.print("P,1\r"); // set sensor type K
+ Serial3.print(F("P,1\r")); // set sensor type K
  Serial3.flush();
+ Serial.println(F("- EC"));
 }
 
 //-----------------------------------------------------------------------------------------
-EC getEc(float _c){
- EC t;
+void getEc(){
  //Serial.println("R\\r --> EC"); //let us know we are asking
- Serial3.print(_c);
- Serial3.print("\r"); //ask device
+ Serial.print(F("EC...          "));
+ Serial3.print(water);
+ Serial3.print(F("\r")); //ask device
  delay(500);
  
- t.conductivity= Serial3.parseInt() ;
- t.tds = Serial3.parseInt();
- t.salinity = Serial3.parseFloat();
+ //ec = Serial3.parseInt();
+ itoa(Serial3.parseInt(),ec,10);
+ Serial3.flush();
+ Serial.println(ec);
+// Serial3.parseInt();  // discard other readings
+// Serial3.parseFloat();
  
- return t;
+// return ec;
  
 }
-//-----------------------------------------------------------------------------------------
-void print_ec(EC &_t){
-  Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-  Serial.println("EC");
-  Serial.print("Conductivity \t");
-  Serial.println(_t.conductivity);
-  Serial.print("tds \t");
-  Serial.println(_t.tds);
-  Serial.print("salinity \t");
-  Serial.println(_t.salinity);
-  Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-  
+
+void getWaterLevel(){
+ Serial.print(F("water level... "));
+ // int reading = analogRead(SENSORPIN);
+ // wl = maxHeight-(analogRead(SENSORPIN)-minVal)/range*maxHeight;
+  dtostrf(maxHeight-(analogRead(SENSORPIN)-minVal)/range*maxHeight, 4,2,wl);
+  Serial.println(wl);
+ // return height;
 }
+
+

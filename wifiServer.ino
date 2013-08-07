@@ -4,7 +4,6 @@
     Requires Networks = wifi.getScanNew(data, sizeof(data), true); 
     where true returns Data formated as json array */
 void sendInitialJSON(){
-  char *mac = wifi.getMAC(buf, sizeof(buf));
   wifi.println(F("HTTP/1.1 200 OK"));
   wifi.println(F("Content-Type: application/json"));
   wifi.println(F("Transfer-Encoding: chunked"));
@@ -14,9 +13,9 @@ void sendInitialJSON(){
   wifi.println();
   
   wifi.sendChunk(F("{ \"mac\": \""));
-  wifi.sendChunk(mac);
+  wifi.sendChunk(MAC);
   wifi.sendChunkln(F("\", \"networks\": "));
-  wifi.sendChunkln(Networks);
+  wifi.sendChunkln(networks);
   wifi.sendChunkln(F("}"));
   wifi.sendChunkln();
 }

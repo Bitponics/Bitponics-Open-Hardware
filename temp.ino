@@ -1,6 +1,6 @@
 /*-------------------------------------------*
-              ONE WIRE
-*-------------------------------------------*/
+ ONE WIRE
+ *-------------------------------------------*/
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -8,72 +8,74 @@
 #define TEMPERATURE_PRECISION 12
 
 OneWire onewire(ONE_WIRE_BUS);
-DallasTemperature water(&onewire);
-DeviceAddress water_temp;
+DallasTemperature waterSensor(&onewire);
+DeviceAddress waterTempAddress;
 
 /*-------------------------------------------*
-            DTH-22 TEMP/HUM
-*-------------------------------------------*/
+ DTH-22 TEMP/HUM
+ *-------------------------------------------*/
 #include "DHT.h"
-#define DHTPIN 23     // pin
+#define DHTPIN 23       // pin
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 
 DHT dht(DHTPIN, DHTTYPE);
 
-void setup_temps(){
-  
+void setupTemps(){
+
   dht.begin();
-  float t = dht.readTemperature();
-  if(isnan(t)) {/*reboot;*/}
-  Serial.print("Air Temp: "); Serial.println(t);
-  float h = dht.readHumidity();
-  if(isnan(h)) {/*rebooot ;*/}
-  Serial.print("Humidity: "); Serial.println(h);
-  
-  water.begin();
-
-  Serial.print("Temperature Init...");
-  Serial.print("Found ");
-  Serial.print(water.getDeviceCount(), HEX);
-  Serial.println(" devices.");
-  Serial.println(); 
-  
-  if(!water.getAddress(water_temp,0)){
-   Serial.println("Failed to get Address");
-    
+  Serial.println("- DHT");
+  waterSensor.begin();
+  if(!waterSensor.getAddress(waterTempAddress,0)){
+    Serial.println(F("Failed to setup water temp sensor"));
+    //resetBoard();
   } 
-  water.requestTemperatures();
-  float tempC = water.getTempC(water_temp);
-  Serial.print("Water Temp: ");Serial.println(tempC);
-  
-}
-//convert temp FLoat to Char
-String tempChar(float t, char* buf){
-  char* c = dtostrf(t,5,2,buf);
-  return c;
-}
-//obsolete
-//char* waterTempChar(char* buf){
-//  float w = getWaterTemp();
-//  return dtostrf(w,5,2,buf);
-//  
-//}
-float getWaterTemp(){
- 
-  water.requestTemperatures();
-  return water.getTempC(water_temp); 
-  
+  else Serial.println(F("- Water Temp"));
+
 }
 
-float getAirTemp(){
-  //error checking...
-  float t = dht.readTemperature();
-  if(isnan(t)) return NULL;
-  else return t;
+void getWaterTemp(){
+  Serial.print(F("water temp...  "));
+  
+  waterSensor.requestTemperatures();
+  //water = waterSensor.getTempC(waterTempAddress);
+      dtostrf(waterSensor.getTempC(waterTempAddress),4,2,water);
+  Serial.println(water);
+  
+//  return waterSensor.getTempC(waterTempAddress); 
+
 }
 
-float getHumidity(){
-  float h = dht.readHumidity();
-  if(isnan(h)) return NULL;
-  else return h;
+void getAirTemp(){
+  Serial.print(F("air temp...    "));
+  errors= 0;
+  //air = dht.readTemperature();
+  dtostrf(dht.readTemperature(),4,2,air);
+//  while(isnan(air)){
+//    errors++;
+//    if(errors > errMax) {
+//      Serial.println(F("temperature read error... reseting!"));
+//      resetBoard(); 
+//    }
+//  }
+
+Serial.println(air);
 }
+
+void getHumidity(){
+ // float h = dht.readHumidity();
+// hum = dht.readHumidity();
+Serial.print(F("humidity...    "));
+  dtostrf(dht.readHumidity(),4,2,hum);
+Serial.println(hum);
+
+//  while(isnan(h)){
+//    errors++;
+//    if(errors > errMax) {
+//      Serial.println(F("humididty read error... reseting!"));
+//      resetBoard(); 
+//    }
+//  }
+ // return h;
+}
+
+

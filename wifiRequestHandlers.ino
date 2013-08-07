@@ -3,99 +3,47 @@
 
 void wifiAssocRequestHandler(){
 
-  if (wifi.gets(buf, sizeof(buf))) {
-    Serial.print(F("<------POST Response: "));
+  char errorMsg[28];
 
-    if(strncmp_P(buf, PSTR("HTTP/1.1 200 OK"), 15) == 0 || strncmp_P(buf, PSTR("TTP/1.1 200 OK"), 14) == 0 || strncmp_P(buf, PSTR("TP/1.1 200 OK"), 13) == 0){ // for some reason sometimes it reads "HT" early
-      Serial.println(F("Success------>"));
-      Serial.println(F("HTTP/1.1 200 OK")); 
-      if (wifi.match(F("Content-Type:"))){ 
-        Serial.print(F("Content-Type: "));
-        wifi.getsTerm(data, sizeof(data),'\n'); 
-        Serial.println(data);
-      }
-      if (wifi.match(F("Set-Cookie"))){ 
-        Serial.print(F("Set-Cookie: "));
-        wifi.getsTerm(data, sizeof(data),'\n'); 
-        Serial.print(data);
-      }
-      if (wifi.match(F("X-Bpn-Resourcename:"))){
-        Serial.print(F("X-Bpn-Resourcename: ")); 
-        wifi.gets(data, sizeof(data)); 
-        Serial.println(data);
-        String _pr = data; // our page resource from the server
-        _pr.trim();
-        if(_pr=="status"){
-          if (wifi.match(F("Content-Length:"))){
-            Serial.print(F("Content-Length: ")); 
-            wifi.gets(data, sizeof(data)); 
-            Serial.println(data);
-          }
-          if (wifi.match(F("Connection:"))){
-            Serial.print(F("Connection: ")); 
-            wifi.gets(data, sizeof(data)); 
-            Serial.println(data);
-          }
-          
+  //Serial.println(buf);
+  if(wifi.match(F("HTTP/1.1 200"))){
 
-          if (wifi.match(F("STATES="))){
-            Serial.print(F("STATES="));
-            wifi.getsTerm(data, sizeof(data),';');
-            Serial.println(data);
-            String r = data;
-            r.trim();
-            int relayState[2] = {int(r.charAt(0)-'0'), int(r.charAt(2)-'0')};
-            for(int i=0; i<2;i++){
-              if(relayState[i] != curRelayState[i]) switchRelay(i, relayState[i]);
-            }
-           
-          }
-          if(wifi.match(F("CALIB_MODE="))){
-            Serial.print(F("CALIB_MODE="));
-            wifi.getsTerm(data, sizeof(data),'\a');
-            Serial.println(data);
-            calibMode=data;
-            calibrate();
-          }
-          else calibMode = "";
-//          wifi.gets(data, sizeof(data));
-//          Serial.println(data);
-
-//          if(wifi.match(F("/a"))){
-//            bReceivedStatus = true;
-//            wifi.flushRx();		// discard rest of input
-//
-//            Serial.println(F("<------POST Success------>"));
-//          }
-//          else Serial.println(F("Error: no end byte"));
-
+    //Serial.println(F("success!"));
+    if (wifi.match(F("STATES="))){
+      Serial.print(F("states = "));
+      wifi.getsTerm(statesBuf, sizeof(statesBuf), '\n');
+      Serial.println(statesBuf);
+      int relayState[2] = {
+        int(statesBuf[2]-'0'), int(statesBuf[6]-'0')
+        };
+        for(int i=0; i<2;i++){
+          if(relayState[i] != curRelayState[i] || completedPosts == 0) switchRelay(i, relayState[i]);
         }
-      }
-    } 
-    else if(strncmp_P(buf,PSTR("HTTP/1.1 401 Unauthorized"),23)==0 ){
-      //action item for unathorized server requests?
-      Serial.println(F("Unauthorized------>"));
-      Serial.println("HTTP/1.1 401 Unauthorized");
-      wifi.gets(buf, sizeof(buf));
-      Serial.println(buf);
-      bReceivedStatus = true;
-    } 
-    else {
-      Serial.println("Bad format------>");
-      Serial.println(buf);
-      wifi.gets(buf, sizeof(buf));
-      Serial.println(buf);
-      bReceivedStatus = true;
+      completedPosts ++;
     }
+    else if(wifi.match(F("CALIB_MODE="))){
+      Serial.print(F("calib mode = "));
+      wifi.getsTerm(calibBuf, sizeof(calibBuf),'\n');
+      Serial.println(calibBuf);
+      calibMode=calibBuf;
+      calibrate();
+
+    }
+    else Serial.println(F("no update matches"));
 
   }
-  
- // delay(4000); // why is this here?
+  else {
+    Serial.print(F("error "));
+    wifi.gets(errorMsg,sizeof(errorMsg));
+    Serial.println(errorMsg);
+  }
 
+  Serial.println(F("------- Close -------"));
+
+  timeout = millis();
   wifi.flushRx();
   bReceivedStatus = true;
- // if(wifi.isConnected()) wifi.close();
- // Serial.println("end close");
+
 
 }
 
@@ -104,6 +52,26 @@ void wifiAssocRequestHandler(){
 void wifiApRequestHandler(){
 
   /* See if there is a request */
+  /*
+  
+   switch(wifi.multiMatch_P(1000,2,F("GET"), F("POST"))){
+   case -1:
+   Serial.print(F("-> Unexpected Request"));
+   wifi.flushRx();
+   
+   break;
+   case 0:
+   apGetResponse();
+   break;
+   case 1:
+   apPostResponse();
+   break;
+   
+   }
+   
+   */
+
+
   if (wifi.gets(buf, sizeof(buf))) {
     if (strncmp_P(buf, PSTR("GET"), 3) == 0) {
       apGetResponse(); 
@@ -147,14 +115,14 @@ void wifiApRequestHandler(){
 
 void apGetResponse(){
 
-  Serial.println(F("Got GET request"));
-  while (wifi.gets(buf, sizeof(buf)) > 0) {	      
-    /* Skip rest of request */
-    Serial.println(buf);
-  }
+  Serial.println(F("-> Received GET request"));
+  //  while (wifi.gets(buf, sizeof(buf)) > 0) {	      
+  //    /* Skip rest of request */
+  //    Serial.println(buf);
+  //  }
   //sendIndex();
   sendInitialJSON();
-  Serial.println(F("Sent JSON ")); 
+  Serial.println(F("-> Sent JSON ")); 
 
 }
 
@@ -164,7 +132,7 @@ void apPostResponse(){
   char ssid[32];
   char pass[32];
   char mode[16];
-  Serial.println(F("Got POST"));
+  Serial.println(F("-> Received POST"));
 
   /* Get posted field value */
   if (wifi.match(F("SSID="))) wifi.getsTerm(ssid, sizeof(ssid),'\n');
@@ -185,21 +153,25 @@ void apPostResponse(){
 
   sendConfirm(ssid, pass, mode, SKEY, PKEY);
 
-  if(wifi.setFtpUser(SKEY)) Serial.println(F("SAVED SKEY"));
-  if(wifi.setFtpPassword(PKEY)) Serial.println(F("SAVED PKEY"));
+  if(wifi.setFtpUser(SKEY)) Serial.println(F("-> Set SKEY"));
+  if(wifi.setFtpPassword(PKEY)) Serial.println(F("Set PKEY"));
 
   loadServerKeys();
 
-  if(wifi.save() )Serial.println(F("Saving..."));
-  if(wifi.reboot())Serial.println(F("Rebooted"));
+  if(wifi.save() )Serial.println(F("-> Saving wifi data"));
+  if(wifi.reboot())Serial.println(F("-> Rebooted wifi"));
 
   loadServerKeys();                
 
-  Serial.println(F("Sent greeting page"));
+  Serial.println(F("-> Sent greeting page"));
   wifiConnect(ssid, pass, mode);
 
-
-
 }
+
+
+
+
+
+
 
 

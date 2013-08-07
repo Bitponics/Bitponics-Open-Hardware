@@ -3,35 +3,44 @@
 #define LUX_SDA 20
 #define LUX_SCL 21
 
-// via __ Adafruit Example for demonstrating the TSL2561 library - public domain!
-
 Adafruit_TSL2561 tsl = Adafruit_TSL2561(TSL2561_ADDR_FLOAT, 12345);
 
 //-------------------------------------------------------
-void setup_light(){
+void setupLight(){
 
   if(!tsl.begin()){
-    /* There was a problem detecting the ADXL345 ... check your connections */
-    Serial.print("no Lux sensor detected");
+    Serial.print(F("no lux sensor detected"));
     while(1);
   }
-  else Serial.print("Light Sensor Ready...");
+  else Serial.println(F("- lux Sensor"));
 
   tsl.enableAutoGain(true);          /* Auto-gain ... switches automatically between 1x and 16x */
-  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);      /* fast but low resolution */
+  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);      /* fast but low resolution */
 
 }
 
 //-------------------------------------------------------
-float getLight(){
+void getLight(){
   /* Get a new sensor event */
+  //int tempInt;
+  Serial.print(F("light...       "));
   sensors_event_t event;
-  tsl.getEvent(&event);
+  
+ // while(tempInt<=0){
+    tsl.getEvent(&event);
+    //lux = event.light;
+    itoa(event.light,lux,10);
+    Serial.println(lux);
+//    errors ++;
+//    if(errors>5){
+//      Serial.println(F("Lux error, reseting"));
+//      resetBoard();
+//    }
+//    delay(10);
+  //}
+  
+ // return tempInt;
 
-  if (event.light){
-    return char(event.light);
-  }
-  return 0;
 
 }
 //-------------------------------------------------------
