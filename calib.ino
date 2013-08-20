@@ -5,7 +5,7 @@ String calibMode = "";
 
 void calibrate(){
   setColor(YELLOW);
-  //long curTime;
+
   // PH *****
   if(calibMode == "ph_7"){
     Serial.println(F("ph_7 calib begun"));

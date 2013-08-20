@@ -109,18 +109,6 @@ void setupSensors(unsigned int DATABAUD){
   setupPh(DATABAUD);
 }
 
-//
-//void terminal(){
-//
-//  while(Serial1.available() > 0) {
-//    Serial.write(Serial1.read());
-//  }
-//
-//  if(Serial.available()) {
-//    Serial1.write(Serial.read());
-//  }
-//
-//}
 
 void resetBoard(){
   //wdt_enable(WDTO_8S); 
@@ -138,65 +126,9 @@ void setupWDT() {
   sei();
 }
 
-//void serialEvent(){
-//  Serial.println(".");
-//  if(!terminalMode){
-//    Serial.readBytesUntil('\r', buf, 5);
-//    //    if(buf == "exit"){
-//    //      terminalMode = false; 
-//    //    }
-//    Serial.print(F("buffer: "));
-//    Serial.println(buf);
-//    if(buf == "$$$"){
-//      terminalMode = 1;
-//      Serial.println(F("attempting wifi terminal"));
-//      Serial1.print(F("$$$")); 
-//    }
-//    if(buf == "sen"){
-//      terminalMode = 2;
-//      Serial.print(F("Sensor mode")); 
-//    }
-//  }
-//  else if(terminalMode==1){ 
-//    Serial1.write(Serial.read());
-//  }
-//  else{
-//    char inbyte = Serial.read();
-//    Serial.println(F("sensor cmd"));
-//  }
-//}
-//
-//void serialEvent1(){
-//  if(terminalMode  == 1){
-//    Serial.write(Serial1.read());
-//  }
-//
-//}
 
 ISR(WDT_vect){
-  //Serial.println(F("~~~"));
   if(millis()-timeout > 45000 && requestCount > 0){
-
     resetBoard(); 
   }
 }
-
-//void logMsg(int type, String msg){
-//  switch(type){
-//    case SENSOR:
-//    Serial.print("-");
-//    Serial.println(msg);
-//    break;
-//  }
-//  
-//  
-//}
-
-
-//String tempChar(float t, char* buf){
-//  char* c = dtostrf(t,5,2,buf);
-//  return c;
-//}
-
-
-

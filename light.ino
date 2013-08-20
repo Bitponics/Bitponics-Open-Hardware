@@ -21,25 +21,14 @@ void setupLight(){
 
 //-------------------------------------------------------
 void getLight(){
-  /* Get a new sensor event */
-  //int tempInt;
+
   Serial.print(F("light...       "));
   sensors_event_t event;
-  
- // while(tempInt<=0){
+
     tsl.getEvent(&event);
     //lux = event.light;
     itoa(event.light,lux,10);
     Serial.println(lux);
-//    errors ++;
-//    if(errors>5){
-//      Serial.println(F("Lux error, reseting"));
-//      resetBoard();
-//    }
-//    delay(10);
-  //}
-  
- // return tempInt;
 
 
 }

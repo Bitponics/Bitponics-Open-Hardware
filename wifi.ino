@@ -94,7 +94,6 @@ void setupWifi(unsigned int BAUD) {
     setColor(ORANGE);
     loadServerKeys();
     while(!associateWifi()){
-      // Serial.println(F("-> Association attempt failed")); 
       associationAttemps++;
       if (associationAttemps > 10){
         resetWifi();
@@ -120,7 +119,6 @@ void checkBtn(){
     btnState = digitalRead(BUTTON);
 
     if(btnTime > 3000){
-      // change network name and reset
       Serial.println(F("button hard reset")); 
       Serial.println(F("-> Setting AP Mode"));
       wifi.setDeviceID(deviceId);
@@ -137,8 +135,7 @@ void checkBtn(){
 //********************************************************************************
 
 void wifiLoop(){
-  //Serial.println("in loop");
-  // delay(100);
+   delay(10);
   if(WIFI_STATE == WIFI_UNSET){
     if (wifi.available() > 0) {
       wifiApRequestHandler();
@@ -163,7 +160,6 @@ void wifiLoop(){
       bReceivedStatus = false; // reset status variable
       basicAuthConnect("POST","status", true); // standard status update post
       time_status = millis() + statusPutDelay; // reset POST timer
-      //printMem();
     }
   }
 }
@@ -197,5 +193,6 @@ void macAddress(char a[]){
       c++;
     }
   }
+  
 }
 
