@@ -60,6 +60,9 @@ void setupWifi(unsigned int BAUD) {
   Serial.println(wifi.getFreeMemory(),DEC);
 
   Serial1.begin(BAUD);
+
+  wifiUpdate();
+
   if (!wifi.begin(&Serial1, &Serial)) {
     Serial.println(F("Failed to start wifi"));
     //terminal();
@@ -76,7 +79,7 @@ void setupWifi(unsigned int BAUD) {
   macAddress(MAC);
   Serial.print(F("MAC:         "));
   Serial.println(MAC);
-  
+
 
   Serial.print(F("WIFI Mode:   "));
   wifi.getDeviceID(deviceId, sizeof(deviceId));
@@ -135,7 +138,7 @@ void checkBtn(){
 //********************************************************************************
 
 void wifiLoop(){
-   delay(10);
+  delay(10);
   if(WIFI_STATE == WIFI_UNSET){
     if (wifi.available() > 0) {
       wifiApRequestHandler();
@@ -153,7 +156,7 @@ void wifiLoop(){
         Serial.println(F("---------------------"));
         Serial.println();
       } 
-    
+
       Serial.print(F("---- Request "));
       Serial.print(++requestCount);
       Serial.println(F(" ----"));
@@ -165,13 +168,13 @@ void wifiLoop(){
 }
 
 void getSensors(){
- getLight();
- getAirTemp();
- getWaterTemp();
- getHumidity();
- getPh();
- getEc();
- getWaterLevel();
+  getLight();
+  getAirTemp();
+  getWaterTemp();
+  getHumidity();
+  getPh();
+  getEc();
+  getWaterLevel();
 }
 
 void resetWifi(){
@@ -193,6 +196,40 @@ void macAddress(char a[]){
       c++;
     }
   }
-  
+
 }
+
+void wifiUpdate(){
+  delay(1000);
+  Serial1.print("$$$");
+  delayTimeout();
+  while(Serial1.available()>0){
+    Serial1.read();
+  }
+
+  Serial1.print("\r");
+  delayTimeout();
+  if(Serial1.findUntil("2.45", "n")) Serial.println("Wifi up to date");
+  else {
+    Serial.print("Updating WIFI... ");
+    Serial1.print("boot image 34\r");
+    delayTimeout();
+    if(Serial1.findUntil("34", "OK")){
+      Serial1.print("reboot\r");
+      delayTimeout();
+      if(!Serial1.find("*Reboot*")); //reset
+      else Serial.println("success");
+    }
+    else Serial.println("update failed");
+  } 
+}
+
+void delayTimeout(){
+  int count = 0;
+  while(Serial1.available()==0){
+    delay(100);
+    if(count++ > 50); // TODO reset 
+  }
+}
+
 

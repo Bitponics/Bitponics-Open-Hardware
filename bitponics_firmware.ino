@@ -57,7 +57,7 @@ void setup() {
 
   setupRelays();
 
-  Serial.begin(38400);
+  Serial.begin(115200);
   Serial.println();
   Serial.println(F("**********************"));
   Serial.println(F("-> Device Boot"));

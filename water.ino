@@ -34,11 +34,14 @@ void setupEc(unsigned int DATABAUD){
   Serial3.begin(DATABAUD);
   Serial3.setTimeout(6000);
   Serial3.print(F("L1\r"));
-  delay(100);
+  delay(300);
   Serial3.print(F("L0\r"));
-  delay(100);
+  delay(300);
   Serial3.print(F("P,1\r")); // set sensor type to K 0.1
-  Serial3.flush();
+  delay(300);
+  Serial3.print(F("r\r")); // read value
+  delay(300);
+  while(Serial3.available()>0) Serial3.read();
   Serial.println(F("- EC"));
 }
 
@@ -50,8 +53,7 @@ void getEc(){
   int count=0;
   while(Serial3.available()==0) {
     delay(100);
-    if(++count>50) break;
-    
+    if(++count>50) break; 
   } 
   boolean bValSet = false;
   while(Serial3.available()>0){

@@ -41,6 +41,7 @@ void wifiAssocRequestHandler(){
   Serial.println(F("------- Close -------"));
 
   timeout = millis();
+  wifi.close();
   wifi.flushRx();
   bReceivedStatus = true;
 
