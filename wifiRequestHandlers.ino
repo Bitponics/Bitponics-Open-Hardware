@@ -130,45 +130,59 @@ void apGetResponse(){
 void apPostResponse(){
 
   /* Form POST */
-  char ssid[32];
+ // char ssid[32];
   char pass[32];
   char mode[16];
   Serial.println(F("-> Received POST"));
 
   /* Get posted field value */
   if (wifi.match(F("SSID="))) wifi.getsTerm(ssid, sizeof(ssid),'\n');
-  //else pass="error";
-  Serial.println(ssid);
   if (wifi.match(F("PASS="))) wifi.getsTerm(pass, sizeof(pass),'\n');
-  //else pass='error';
-  Serial.println(pass);
   if (wifi.match(F("MODE="))) wifi.getsTerm(mode, sizeof(mode),'\n');
-  //else mode='error';
-  Serial.println(mode);
   if (wifi.match(F("SKEY="))) wifi.getsTerm(SKEY,sizeof(SKEY),'\n');
-  //else _skey='error';
-  Serial.println(SKEY);
   if (wifi.match(F("PKEY="))) wifi.gets(PKEY, sizeof(PKEY));
-  //else _pkey = 'error'; 
-  Serial.println(PKEY);
 
-  sendConfirm(ssid, pass, mode, SKEY, PKEY);
+  printHeaders();
 
-  if(wifi.setFtpUser(SKEY)) Serial.println(F("-> Set SKEY"));
-  if(wifi.setFtpPassword(PKEY)) Serial.println(F("Set PKEY"));
+    wifi.sendChunk(F("{ \"ssid\": \""));
+    wifi.sendChunk(ssid);
+    wifi.sendChunk(F("\", \"pass\": \""));
+    wifi.sendChunk(pass);
+    wifi.sendChunk(F("\", \"mode\": \""));
+    wifi.sendChunk(mode);
+    wifi.sendChunk(F("\", \"skey\": \""));
+    wifi.sendChunk(SKEY);
+    wifi.sendChunk(F("\", \"pkey\": \""));
+    wifi.sendChunk(PKEY);
+    wifi.sendChunkln(F("\" }"));
+    wifi.sendChunkln();
+    
 
-  loadServerKeys();
+  wifi.setFtpUser(SKEY);
+  wifi.setFtpPassword(PKEY);
+
+ // loadServerKeys();
 
   if(wifi.save() )Serial.println(F("-> Saving wifi data"));
   if(wifi.reboot())Serial.println(F("-> Rebooted wifi"));
 
   loadServerKeys();                
 
-  Serial.println(F("-> Sent greeting page"));
-  wifiConnect(ssid, pass, mode);
+//  Serial.println(F("-> Sent greeting page"));
+//  wifiConnect(ssid, pass, mode);
 
 }
 
+void printHeaders(){
+      
+    wifi.println(F("HTTP/1.1 200 OK"));
+    wifi.println(F("Content-Type: application/json"));
+    wifi.println(F("Transfer-Encoding: chunked"));
+    wifi.println(F("Access-Control-Allow-Origin: *"));
+    wifi.println(F("Cache-Control: no-cache"));
+    wifi.println(F("Connection: close"));
+    wifi.println();
+}
 
 
 

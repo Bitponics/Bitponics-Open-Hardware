@@ -15,6 +15,8 @@ const byte GREEN[] = {
   0,255,0};
 const byte PURPLE[] = {
   255,0,255};
+const byte BLACK[] = {
+  0,0,0};
 
 
 #define RESET 7
@@ -57,52 +59,24 @@ void setup() {
 
   setupRelays();
 
-  Serial.begin(115200);
+  Serial.begin(38400);
   Serial.println();
   Serial.println(F("**********************"));
   Serial.println(F("-> Device Boot"));
+  
+
+  setupSensors(38400);
+  setupWifi(9600);
 }
 
 void loop(){
-
-  if(setupSequence && !terminalMode){
-    setupSensors(38400);
-    if(!digitalRead(BUTTON)) checkTerm();
-    if(!terminalMode){
-      setupWifi(9600);
-      setupSequence = false;
-    }
-  }
-
-  checkBtn();
-  if(!terminalMode) wifiLoop();
+  wifiLoop();
   if(millis()>reset_time) resetBoard();
 }
 
-void checkTerm(){
-  Serial.println(F("Mode Switch"));
-  int pressCount = 0;
-  int startTime = millis();
-  boolean lastState;
-  while(startTime+3000>millis()){
-    boolean curState = digitalRead(BUTTON);
-    if(lastState!=curState){
-      pressCount++; 
-      Serial.println(pressCount);
-    }
-    if (pressCount>4){
-      Serial.println(F("term mode"));
-      terminalMode = true;
-      break;
-    }
-    lastState = curState;
-  }
-  Serial.println(F("end mode switch"));
-
-}
 
 void setupSensors(unsigned int DATABAUD){
-  Serial.println(F("-> Initalizing sensors"));
+  Serial.println(F("-> Initializing sensors"));
   setupTemps(); // TODO: change to setupTempAndHumidity();
   setupLight();
   setupEc(DATABAUD);
@@ -132,3 +106,6 @@ ISR(WDT_vect){
     resetBoard(); 
   }
 }
+
+
+

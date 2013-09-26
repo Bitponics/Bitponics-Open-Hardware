@@ -8,7 +8,7 @@ void loadServerKeys(){
   Serial.println(PKEY);
   if(SKEY[0] == 'r'){
     Serial.println(F("-> Incorrect keys, reseting"));
-    wifi.setDeviceID("Bitponics");
+    wifi.setDeviceID(PSTR("Bitponics"));
     wifi.save();
     resetBoard(); 
   }
@@ -41,7 +41,7 @@ bool associateWifi(){
 
 //********************************************************************************
 void scanNetworks(){
-  Serial.println(F("-> Scan Mode"));
+  Serial.print(F("-> Scanning networks... "));
   networks = wifi.getScanNew(data, sizeof(data), true);
 
   //if String networks has only [] find networks
@@ -57,7 +57,7 @@ void wifiAp(){
   WIFI_STATE=WIFI_UNSET;
 
   scanNetworks();
-  Serial.println(F("-> Setting up AP Mode"));
+  Serial.println(F("-> Setting up AP... "));
   bwifiSet = false;
 
   //      wifi.setAuth(WIFLY_WLAN_AUTH_OPEN);
@@ -65,14 +65,14 @@ void wifiAp(){
   //      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
 
   if(wifi.createAPNetwork("BITPONICS", 1)){
-    Serial.println(F("-> AP Created"));
+    Serial.println(F("created"));
     Serial.print(F("IP: "));
     Serial.println(wifi.getIP(addr, sizeof(addr)));
 
   } 
   else {
 
-    Serial.print(F("-> AP Failed"));
+    Serial.print(F("failed"));
     //reboot
   }
 
@@ -80,7 +80,7 @@ void wifiAp(){
     wifi.setPort(80);
     /* local port does not take effect until the WiFly has rebooted (2.32+) */
     wifi.save();
-    Serial.println(F("-> Set port to 80, rebooting..."));
+    Serial.println(F("-> Set port to 80, rebooting"));
     wifi.reboot();
     delay(3000);
     
@@ -238,7 +238,7 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
 //********************************************************************************
 void wifiConnect(char *ssid, char *pass, char *mode){
   /* Setup the wifi to store wifi network & passphrase */
-  Serial.println(F("-> Saving network"));
+ // Serial.println(F("-> Saving network"));
 
   if(wifi.setAuth(WIFLY_WLAN_AUTH_OPEN)) Serial.println(F("Set WPA Auth")); // TODO check if this is correct
   if(wifi.setPassphrase(pass)) Serial.println(F("Set Pass"));
@@ -275,7 +275,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
     Serial.print(F("Gateway: "));
     Serial.println(wifi.getGateway(addr, sizeof(addr)));
 
-    basicAuthConnect("POST","status", true);
+    basicAuthConnect(PSTR("POST"),PSTR("status"), true);
 
   }
   else {

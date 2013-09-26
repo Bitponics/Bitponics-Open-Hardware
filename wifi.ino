@@ -29,7 +29,7 @@ byte WIFI_STATE;
 
 void setupWifi(unsigned int BAUD);
 void wifiApRequestHandler();
-void wifiConnect(char *ssid, char *pass, char *mode);
+//void wifiConnect(char *ssid, char *pass, char *mode);
 boolean wifiConnection();
 void wifiLoop();
 
@@ -67,11 +67,12 @@ void setupWifi(unsigned int BAUD) {
     Serial.println(F("Failed to start wifi"));
     //terminal();
   }
+  checkBtn();
 
   Serial.print(F("SSID:        "));
   wifi.getSSID(ssid, sizeof(ssid));
   Serial.println(ssid);
-  if(strcasecmp(ssid, deviceId) == 0 || strcasecmp(ssid, "roving1") == 0 ){
+  if(strcasecmp(ssid, deviceId) == 0 || strcasecmp(ssid, PSTR("roving1")) == 0 ){
     Serial.println(F("-> Setting AP Mode"));
     wifi.setDeviceID(deviceId);
     wifi.save();
@@ -111,29 +112,7 @@ void setupWifi(unsigned int BAUD) {
 }
 
 
-/// Reset network
-void checkBtn(){
-  boolean btnState = digitalRead(BUTTON);
-  long btnStartTime = millis();
-  long btnTime = 0;
 
-  while(!btnState){
-    btnTime = millis() - btnStartTime;
-    btnState = digitalRead(BUTTON);
-
-    if(btnTime > 3000){
-      Serial.println(F("button hard reset")); 
-      Serial.println(F("-> Setting AP Mode"));
-      wifi.setDeviceID(deviceId);
-      wifi.save();
-      resetBoard();
-    }
-    else if(btnTime > 1){
-      resetBoard();
-    }
-  }
-
-}
 
 //********************************************************************************
 
@@ -201,7 +180,7 @@ void macAddress(char a[]){
 
 void wifiUpdate(){
   delay(1000);
-  Serial1.print("$$$");
+  Serial1.print(F("$$$"));
   delayTimeout();
   while(Serial1.available()>0){
     Serial1.read();
@@ -209,18 +188,18 @@ void wifiUpdate(){
 
   Serial1.print("\r");
   delayTimeout();
-  if(Serial1.findUntil("2.45", "n")) Serial.println("Wifi up to date");
+  if(Serial1.findUntil(PSTR("2.45"), PSTR("n"))) Serial.println(F("Wifi up to date"));
   else {
-    Serial.print("Updating WIFI... ");
-    Serial1.print("boot image 34\r");
+    Serial.print(F("Updating WIFI... "));
+    Serial1.print(F("boot image 34\r"));
     delayTimeout();
-    if(Serial1.findUntil("34", "OK")){
-      Serial1.print("reboot\r");
+    if(Serial1.findUntil(PSTR("34"), PSTR("OK"))){
+      Serial1.print(F("reboot\r"));
       delayTimeout();
-      if(!Serial1.find("*Reboot*")); //reset
-      else Serial.println("success");
+      if(!Serial1.find(PSTR("*Reboot*"))); //reset
+      else Serial.println(F("success"));
     }
-    else Serial.println("update failed");
+    else Serial.println(F("update failed"));
   } 
 }
 
@@ -230,6 +209,27 @@ void delayTimeout(){
     delay(100);
     if(count++ > 50); // TODO reset 
   }
+}
+
+/// Reset network
+void checkBtn(){
+
+  if(!digitalRead(BUTTON)){
+    for(int i=0; i<3; i++){
+      setColor(BLACK);
+      delay(500);
+      setColor(BLUE);
+      delay(500);
+    }
+
+    Serial.println(F("-> Setting AP Mode"));
+    wifi.setDeviceID(PSTR("Bitponics"));
+    wifi.setSSID(PSTR("Bitponics"));
+    wifi.save();
+    delay(2000);
+    resetBoard();
+  }
+
 }
 
 
