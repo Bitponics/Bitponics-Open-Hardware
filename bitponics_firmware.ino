@@ -33,7 +33,7 @@ int terminalMode;
 int errors = 0;
 int errMax = 5;
 boolean setupSequence = true;
-boolean debug = true;
+boolean debug = false;
 
 unsigned int completedPosts = 0;
 unsigned int failedPosts = 0;
