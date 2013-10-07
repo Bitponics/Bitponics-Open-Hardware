@@ -24,19 +24,26 @@ const byte BLACK[] = {
 #define BUTTON A2
 
 char addr[16];
-char buf[80];
+//char buf[80];
 long timeout;
-unsigned long reset_time = 1200000; //20 minutes for reset
+unsigned long reset_time = 600000; //10 minutes for reset
 unsigned long requestCount = 0;
 int terminalMode;
 
 int errors = 0;
 int errMax = 5;
 boolean setupSequence = true;
-boolean debug = false;
+boolean debug = true;
 
 unsigned int completedPosts = 0;
 unsigned int failedPosts = 0;
+
+void setupWifi(unsigned int BAUD);
+void wifiApRequestHandler();
+//void wifiConnect(char *ssid, char *pass, char *mode);
+boolean wifiConnection();
+void wifiLoop();
+
 
 //*********************  Sensor Variables  ************************ **************
 char ec[5];

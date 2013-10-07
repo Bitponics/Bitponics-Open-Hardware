@@ -21,20 +21,22 @@ void wifiAssocRequestHandler(){
         }
       completedPosts ++;
     }
-    else if(wifi.match(F("CALIB_MODE="))){
+    if(wifi.match(F("CALIB_MODE="))){
       Serial.print(F("calib mode = "));
-      wifi.getsTerm(calibBuf, sizeof(calibBuf),'\n');
-      Serial.println(calibBuf);
-      calibMode=calibBuf;
+      wifi.getsTerm(calibMode, sizeof(calibMode),'\n');
+      Serial.println(calibMode);
+//    calibMode=calibBuf;
       calibrate();
 
     }
-    else Serial.println(F("no update matches"));
+    else memset(&calibMode[0], 0, sizeof(calibMode)); // clearing the calibMode array
+    //else Serial.println(F("no update matches"));
 
   }
   else {
-    Serial.print(F("error "));
+    
     wifi.gets(errorMsg,sizeof(errorMsg));
+    Serial.println(F("error "));
     Serial.println(errorMsg);
   }
 
@@ -53,65 +55,67 @@ void wifiAssocRequestHandler(){
 void wifiApRequestHandler(){
 
   /* See if there is a request */
-  /*
-  
-   switch(wifi.multiMatch_P(1000,2,F("GET"), F("POST"))){
-   case -1:
-   Serial.print(F("-> Unexpected Request"));
-   wifi.flushRx();
-   
-   break;
-   case 0:
-   apGetResponse();
-   break;
-   case 1:
-   apPostResponse();
-   break;
-   
-   }
-   
-   */
 
 
-  if (wifi.gets(buf, sizeof(buf))) {
-    if (strncmp_P(buf, PSTR("GET"), 3) == 0) {
-      apGetResponse(); 
-    }
-    else if (strncmp_P(buf, PSTR("OPEN*GET"), 8) == 0) {
-      apGetResponse();
-    }
-    else if (strncmp_P(buf, PSTR("*OPEN*GET"), 9) == 0) {
-      apGetResponse();
-    }
-    else if (strncmp_P(buf, PSTR("PEN*GET"), 7) == 0) {
-      apGetResponse();
-    }  
-    else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
-      apPostResponse();
+  switch(wifi.multiMatch_P(1000,2,F("GET"), F("POST"))){
+  case -1:
+    Serial.print(F("-> Unexpected Request"));
+    wifi.flushRx();
 
-    }
-    else if (strncmp_P(buf, PSTR("OPEN*POST"), 9) == 0) {
-      apPostResponse();
-
-    } 
-    else if (strncmp_P(buf, PSTR("PEN*POST"), 8) == 0) {
-      apPostResponse();
-
-    } 
-    else if (strncmp_P(buf, PSTR("*OPEN*POST"), 10) == 0) {
-      apPostResponse();
-
-    }
-    else {
-      /* Unexpected request */
-      Serial.print(F("Unexpected Request : "));
-      Serial.println(buf);
-      wifi.flushRx();		// discard rest of input
-      Serial.println(F("Sending 404"));
-      //send404();
-    } 
+    break;
+  case 0:
+    apGetResponse();
+    break;
+  case 1:
+    apPostResponse();
+    break;
 
   }
+
+
+  /*
+
+   if (wifi.gets(buf, sizeof(buf))) {
+   if (strncmp_P(buf, PSTR("GET"), 3) == 0) {
+   apGetResponse(); 
+   }
+   else if (strncmp_P(buf, PSTR("OPEN*GET"), 8) == 0) {
+   apGetResponse();
+   }
+   else if (strncmp_P(buf, PSTR("*OPEN*GET"), 9) == 0) {
+   apGetResponse();
+   }
+   else if (strncmp_P(buf, PSTR("PEN*GET"), 7) == 0) {
+   apGetResponse();
+   }  
+   else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
+   apPostResponse();
+   
+   }
+   else if (strncmp_P(buf, PSTR("OPEN*POST"), 9) == 0) {
+   apPostResponse();
+   
+   } 
+   else if (strncmp_P(buf, PSTR("PEN*POST"), 8) == 0) {
+   apPostResponse();
+   
+   } 
+   else if (strncmp_P(buf, PSTR("*OPEN*POST"), 10) == 0) {
+   apPostResponse();
+   
+   }
+   else {
+   // Unexpected request
+   Serial.print(F("Unexpected Request : "));
+   Serial.println(buf);
+   wifi.flushRx();		// discard rest of input
+   Serial.println(F("Sending 404"));
+   //send404();
+   } 
+   
+   
+   }
+   */
 }
 
 void apGetResponse(){
@@ -130,7 +134,7 @@ void apGetResponse(){
 void apPostResponse(){
 
   /* Form POST */
- // char ssid[32];
+  // char ssid[32];
   char pass[32];
   char mode[16];
   Serial.println(F("-> Received POST"));
@@ -144,45 +148,46 @@ void apPostResponse(){
 
   printHeaders();
 
-    wifi.sendChunk(F("{ \"ssid\": \""));
-    wifi.sendChunk(ssid);
-    wifi.sendChunk(F("\", \"pass\": \""));
-    wifi.sendChunk(pass);
-    wifi.sendChunk(F("\", \"mode\": \""));
-    wifi.sendChunk(mode);
-    wifi.sendChunk(F("\", \"skey\": \""));
-    wifi.sendChunk(SKEY);
-    wifi.sendChunk(F("\", \"pkey\": \""));
-    wifi.sendChunk(PKEY);
-    wifi.sendChunkln(F("\" }"));
-    wifi.sendChunkln();
-    
+  wifi.sendChunk(F("{ \"ssid\": \""));
+  wifi.sendChunk(ssid);
+  wifi.sendChunk(F("\", \"pass\": \""));
+  wifi.sendChunk(pass);
+  wifi.sendChunk(F("\", \"mode\": \""));
+  wifi.sendChunk(mode);
+  wifi.sendChunk(F("\", \"skey\": \""));
+  wifi.sendChunk(SKEY);
+  wifi.sendChunk(F("\", \"pkey\": \""));
+  wifi.sendChunk(PKEY);
+  wifi.sendChunkln(F("\" }"));
+  wifi.sendChunkln();
+
 
   wifi.setFtpUser(SKEY);
   wifi.setFtpPassword(PKEY);
 
- // loadServerKeys();
+  // loadServerKeys();
 
   if(wifi.save() )Serial.println(F("-> Saving wifi data"));
   if(wifi.reboot())Serial.println(F("-> Rebooted wifi"));
 
   loadServerKeys();                
 
-//  Serial.println(F("-> Sent greeting page"));
-//  wifiConnect(ssid, pass, mode);
+  //  Serial.println(F("-> Sent greeting page"));
+  //  wifiConnect(ssid, pass, mode);
 
 }
 
 void printHeaders(){
-      
-    wifi.println(F("HTTP/1.1 200 OK"));
-    wifi.println(F("Content-Type: application/json"));
-    wifi.println(F("Transfer-Encoding: chunked"));
-    wifi.println(F("Access-Control-Allow-Origin: *"));
-    wifi.println(F("Cache-Control: no-cache"));
-    wifi.println(F("Connection: close"));
-    wifi.println();
+
+  wifi.println(F("HTTP/1.1 200 OK"));
+  wifi.println(F("Content-Type: application/json"));
+  wifi.println(F("Transfer-Encoding: chunked"));
+  wifi.println(F("Access-Control-Allow-Origin: *"));
+  wifi.println(F("Cache-Control: no-cache"));
+  wifi.println(F("Connection: close"));
+  wifi.println();
 }
+
 
 
 

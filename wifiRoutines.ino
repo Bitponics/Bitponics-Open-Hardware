@@ -18,7 +18,7 @@ void loadServerKeys(){
 //********************************************************************************
 
 bool associateWifi(){
-  
+
   Serial.print(F("-> Connecting to wifi... "));
 
   if (!wifi.isAssociated()){
@@ -83,7 +83,7 @@ void wifiAp(){
     Serial.println(F("-> Set port to 80, rebooting"));
     wifi.reboot();
     delay(3000);
-    
+
   }
 
   Serial.println(F("-> AP Ready"));
@@ -106,13 +106,13 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
 
   uint8_t* hash;
   uint32_t a;
-  
+
   Serial.print(F("-> creating hash... "));
   Sha256.initHmac((uint8_t*)SKEY,16); 
   Sha256.print(F("POST /api/devices/"));
   Sha256.print(MAC);
   Sha256.print(F("/status HTTP/1.1"));
-  if(_bGetData){
+  if(!calibMode[0]){
     Sha256.print(lux);
     Sha256.print(F(","));
     Sha256.print(air);
@@ -126,6 +126,11 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
     Sha256.print(ec);
     Sha256.print(F(","));
     Sha256.print(wl);
+  }
+  else {
+    Sha256.print(calibMode);
+    Sha256.print(F(","));
+    Sha256.print(F("success"));
   }
   Sha256.print(water);
   hash = Sha256.resultHmac(); //must save hash to use
@@ -157,10 +162,11 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
       Serial.println(water);
       Serial.println(F("Content-Type: application/vnd.bitponics.v2.deviceText"));
       Serial.println(F("Cache-Control: no-cache"));
+      if(calibMode[0]) Serial.println(F("X-Bpn-Mode: calib"));
       Serial.println(F("Connection: close"));
       Serial.println();
 
-      if(_bGetData){
+      if(!calibMode[0]){
         Serial.print(lux);
         Serial.print(F(","));
         Serial.print(air);
@@ -175,6 +181,12 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
         Serial.print(F(","));
         Serial.print(wl);
       }
+      else {
+        Serial.print(calibMode);
+        Serial.print(F(","));
+        Serial.print(F("success"));
+      }
+
 
       Serial.println(); 
       Serial.println(); 
@@ -203,10 +215,11 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
     wifi.println(water);
     wifi.println(F("Content-Type: application/vnd.bitponics.v2.deviceText"));
     wifi.println(F("Cache-Control: no-cache"));
+    if(calibMode[0]) wifi.println(F("X-Bpn-Mode: calib"));
     wifi.println(F("Connection: close"));
     wifi.println();
 
-    if(_bGetData){
+    if(!calibMode[0]){
       wifi.sendChunk(lux);
       wifi.sendChunk(F(","));
       wifi.sendChunk(air);
@@ -220,6 +233,11 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
       wifi.sendChunk(ec);
       wifi.sendChunk(F(","));
       wifi.sendChunk(wl);
+    }
+    else {
+      wifi.sendChunk(calibMode);
+      wifi.sendChunk(F(","));
+      wifi.sendChunk(F("success"));
     }
 
     wifi.sendChunkln(); 
@@ -238,7 +256,7 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
 //********************************************************************************
 void wifiConnect(char *ssid, char *pass, char *mode){
   /* Setup the wifi to store wifi network & passphrase */
- // Serial.println(F("-> Saving network"));
+  // Serial.println(F("-> Saving network"));
 
   if(wifi.setAuth(WIFLY_WLAN_AUTH_OPEN)) Serial.println(F("Set WPA Auth")); // TODO check if this is correct
   if(wifi.setPassphrase(pass)) Serial.println(F("Set Pass"));
@@ -267,7 +285,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
   if(wifi.join(ssid, pass, 0)){
     Serial.println(F("-> Connection Success"));
     WIFI_STATE = WIFI_SET;
-    
+
     Serial.print(F("IP: "));
     Serial.println(wifi.getIP(addr, sizeof(addr))); // TODO get rid of buf
     Serial.print(F("Netmask: "));
@@ -285,6 +303,9 @@ void wifiConnect(char *ssid, char *pass, char *mode){
   }
 
 }
+
+
+
 
 
 

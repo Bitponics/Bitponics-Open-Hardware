@@ -1,7 +1,7 @@
 #define PH_CAL_TIME 2000
 #define EC_CAL_TIME 2000
 
-String calibMode = "";
+char calibMode[6] = "";
 
 void calibrate(){
   setColor(YELLOW);
@@ -15,6 +15,7 @@ void calibrate(){
     Serial2.print(F("S\r")); // take calib reading
     Serial2.print(F("E\r")); // set in idle
     Serial.println(F("ph_7 calib complete"));
+    
   } 
   if(calibMode == "ph_4"){
     Serial.println(F("ph_4 calib begun"));

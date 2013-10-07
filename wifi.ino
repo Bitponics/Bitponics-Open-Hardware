@@ -10,12 +10,13 @@
 #define WIFI_SET    1
 //#define WIFI_WEP    2
 
-#include <WiFlyHQ.h>
+
 #include "sha256.h"
 //#include "customDataTypes.h"
 
 boolean lastBtnState = true;
 
+#include <WiFlyHQ.h>
 WiFly wifi;
 
 char deviceId[10] = "Bitponics";
@@ -27,19 +28,12 @@ char SKEY[17]; //Private/Secret Key Stored in Wifly FTP User
 char MAC[13];
 byte WIFI_STATE;
 
-void setupWifi(unsigned int BAUD);
-void wifiApRequestHandler();
-//void wifiConnect(char *ssid, char *pass, char *mode);
-boolean wifiConnection();
-void wifiLoop();
-
 int associationAttemps = 0;
 
 char ssid[33];
 
 char data[200];
 char statesBuf[16];
-char calibBuf[18];
 //char opt[20];
 boolean bwifiSet;
 /* time stuff */
@@ -128,13 +122,17 @@ void wifiLoop(){
       wifiAssocRequestHandler(); // handle wifi data
     }
     else if(millis()>time_status && bReceivedStatus == true){ // if last request was completed and timer elapsed, make a request
-      if(calibMode == "") {
+      if(!calibMode[0]) {
         Serial.println();
         Serial.println(F("---- Get sensors ----"));
         getSensors();   
         Serial.println(F("---------------------"));
         Serial.println();
       } 
+      else {
+        Serial.print(F("Calibrate: "));
+        Serial.println(calibMode);
+      }
 
       Serial.print(F("---- Request "));
       Serial.print(++requestCount);
