@@ -64,7 +64,7 @@ void wifiAp(){
   //      wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
   //      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
 
-  if(wifi.createAPNetwork("BITPONICS", 1)){
+  if(wifi.createAPNetwork("BitponicsSetup", 1)){
     Serial.println(F("created"));
     Serial.print(F("IP: "));
     Serial.println(wifi.getIP(addr, sizeof(addr)));
