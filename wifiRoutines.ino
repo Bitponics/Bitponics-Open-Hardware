@@ -43,13 +43,13 @@ bool associateWifi(){
 void scanNetworks(){
   Serial.print(F("-> Scanning networks... "));
   networks = wifi.getScanNew(data, sizeof(data), true);
-int scanCount = 0;
+  int scanCount = 0;
   //if String networks has only [] find networks
-    while(strlen(networks)<3 && scanCount++ < 3){
-      Serial.println("No networks Found, Checking Again.");
-      networks = wifi.getScanNew(data, sizeof(data), true);
-      
-    }
+  while(strlen(networks)<3 || scanCount++ < 3){
+    Serial.println("No networks Found, Checking Again.");
+    networks = wifi.getScanNew(data, sizeof(data), true);
+
+  }
   Serial.println(networks);
 }
 
@@ -304,6 +304,7 @@ void wifiConnect(char *ssid, char *pass, char *mode){
   }
 
 }
+
 
 
 
