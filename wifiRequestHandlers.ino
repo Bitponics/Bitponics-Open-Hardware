@@ -25,7 +25,7 @@ void wifiAssocRequestHandler(){
       Serial.print(F("calib mode = "));
       wifi.getsTerm(calibMode, sizeof(calibMode),'\n');
       Serial.println(calibMode);
-//    calibMode=calibBuf;
+      //    calibMode=calibBuf;
       calibrate();
 
     }
@@ -34,7 +34,7 @@ void wifiAssocRequestHandler(){
 
   }
   else {
-    
+
     wifi.gets(errorMsg,sizeof(errorMsg));
     Serial.println(F("error "));
     Serial.println(errorMsg);
@@ -59,9 +59,9 @@ void wifiApRequestHandler(){
 
   switch(wifi.multiMatch_P(1000,2,F("GET"), F("POST"))){
   case -1:
-    Serial.print(F("-> Unexpected Request"));
-    wifi.flushRx();
-
+    Serial.println(F("-> Unexpected Request"));
+    wifi.gets(data,sizeof(data));
+    Serial.println(data);
     break;
   case 0:
     apGetResponse();
@@ -140,11 +140,12 @@ void apPostResponse(){
   Serial.println(F("-> Received POST"));
 
   /* Get posted field value */
-  if (wifi.match(F("SSID="))) wifi.getsTerm(ssid, sizeof(ssid),'\n');
+  if (wifi.match(F("SSID="))) wifi.getsTerm(ssid, sizeof(ssid),'\n');  
   if (wifi.match(F("PASS="))) wifi.getsTerm(pass, sizeof(pass),'\n');
   if (wifi.match(F("MODE="))) wifi.getsTerm(mode, sizeof(mode),'\n');
   if (wifi.match(F("SKEY="))) wifi.getsTerm(SKEY,sizeof(SKEY),'\n');
   if (wifi.match(F("PKEY="))) wifi.gets(PKEY, sizeof(PKEY));
+
 
   printHeaders();
 
@@ -161,19 +162,21 @@ void apPostResponse(){
   wifi.sendChunkln(F("\" }"));
   wifi.sendChunkln();
 
+//  if(strcasecmp(auth, "OPEN_MODE") == 0) mode = 0;
+//  else mode = 3;
 
-  wifi.setFtpUser(SKEY);
-  wifi.setFtpPassword(PKEY);
+  if(wifi.setAuth(3)) Serial.println(F("-> Set Auth Mode")); // TODO check if this is correct
+  if(wifi.setPassphrase(pass)) Serial.println(F("-> Set Pass"));
+  if(wifi.setDeviceID("Station")) Serial.println(F("-> Set DeviceID"));
+  if(wifi.setSSID(ssid)) Serial.println(F("-> Set SSID  "));
+  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.println(F("-> Set JOIN  "));
+  if(wifi.setFtpUser(SKEY))Serial.println(F("-> Set Private Key  "));
+  if(wifi.setFtpPassword(PKEY))Serial.println(F("-> Set Public Key  "));
+  if( wifi.save() ) Serial.println(F("-> Saved"));
 
-  // loadServerKeys();
+ // wifiConnect(ssid, pass, mode);
 
-  if(wifi.save() )Serial.println(F("-> Saving wifi data"));
-  if(wifi.reboot())Serial.println(F("-> Rebooted wifi"));
-
-  loadServerKeys();                
-
-  //  Serial.println(F("-> Sent greeting page"));
-  //  wifiConnect(ssid, pass, mode);
+  resetBoard();
 
 }
 
@@ -187,11 +190,6 @@ void printHeaders(){
   wifi.println(F("Connection: close"));
   wifi.println();
 }
-
-
-
-
-
 
 
 

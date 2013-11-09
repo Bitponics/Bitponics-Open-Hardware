@@ -28,7 +28,6 @@ char addr[16];
 long timeout;
 unsigned long reset_time = 600000; //10 minutes for reset
 unsigned long requestCount = 0;
-int terminalMode;
 
 int errors = 0;
 int errMax = 5;
@@ -40,12 +39,11 @@ unsigned int failedPosts = 0;
 
 void setupWifi(unsigned int BAUD);
 void wifiApRequestHandler();
-//void wifiConnect(char *ssid, char *pass, char *mode);
 boolean wifiConnection();
 void wifiLoop();
 
 
-//*********************  Sensor Variables  ************************ **************
+//*********************  Sensor Variables  ***************************************
 char ec[5];
 char lux[6];
 char air[7];
@@ -70,7 +68,7 @@ void setup() {
   Serial.println();
   Serial.println(F("**********************"));
   Serial.println(F("-> Device Boot"));
-  
+
 
   setupSensors(38400);
   setupWifi(9600);
@@ -113,6 +111,3 @@ ISR(WDT_vect){
     resetBoard(); 
   }
 }
-
-
-

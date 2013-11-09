@@ -8,7 +8,7 @@ void loadServerKeys(){
   Serial.println(PKEY);
   if(SKEY[0] == 'r'){
     Serial.println(F("-> Incorrect keys, reseting"));
-    wifi.setDeviceID(PSTR("Bitponics"));
+    wifi.setDeviceID(deviceId);
     wifi.save();
     resetBoard(); 
   }
@@ -46,7 +46,7 @@ void scanNetworks(){
   int scanCount = 0;
   //if String networks has only [] find networks
   while(strlen(networks)<3 || scanCount++ < 3){
-    Serial.println("No networks Found, Checking Again.");
+    Serial.println("No networks found, retrying");
     networks = wifi.getScanNew(data, sizeof(data), true);
 
   }
@@ -55,19 +55,19 @@ void scanNetworks(){
 
 //********************************************************************************
 void wifiAp(){
-  WIFI_STATE=WIFI_UNSET;
+  //WIFI_STATE=WIFI_UNSET;
 
   scanNetworks();
-  Serial.println(F("-> Setting up AP... "));
+  Serial.print(F("-> Setting up AP... "));
   bwifiSet = false;
 
   //      wifi.setAuth(WIFLY_WLAN_AUTH_OPEN);
   //      wifi.setJoin(WIFLY_WLAN_JOIN_ADHOC);
   //      wifi.setDHCP(WIFLY_DHCP_MODE_AUTOIP);
 
-  if(wifi.createAPNetwork("BitponicsSetup", 1)){
+  if(wifi.createAPNetwork(deviceId, 1)){
     Serial.println(F("created"));
-    Serial.print(F("IP: "));
+    Serial.print(F("IP:     "));
     Serial.println(wifi.getIP(addr, sizeof(addr)));
 
   } 
@@ -255,59 +255,17 @@ boolean basicAuthConnect(char* _type, char* _route, boolean _bGetData){ // TODO:
 
 }
 //********************************************************************************
-void wifiConnect(char *ssid, char *pass, char *mode){
+void wifiConnect(char *ssid, char *pass, int *mode){
   /* Setup the wifi to store wifi network & passphrase */
   // Serial.println(F("-> Saving network"));
-
-  if(wifi.setAuth(WIFLY_WLAN_AUTH_OPEN)) Serial.println(F("Set WPA Auth")); // TODO check if this is correct
-  if(wifi.setPassphrase(pass)) Serial.println(F("Set Pass"));
-  if(wifi.setDeviceID("Station")) Serial.print(F("Set DeviceID "));
-  Serial.println(wifi.getDeviceID(deviceId,sizeof(deviceId)));
-
-  if( wifi.save() ) Serial.println(F("-> Saved"));
-  if(wifi.setSSID(ssid)) Serial.print(F("-> Set SSID  "));
-  Serial.println(ssid);
-
-  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.print(F("-> Set JOIN  "));
-  Serial.println(wifi.getJoin(), DEC);
-
-  if(wifi.enableDHCP() )Serial.println(F("-> DHCP Enabled "));
-  if(wifi.save() )Serial.println(F("-> Saved"));
-
-  if(wifi.reboot())Serial.println(F("-> Rebooted"));
-
-  wifi.flushRx();
-  if (wifi.isConnected()) {
-    Serial.println(F("Old connection active. Closing"));
-    wifi.close();
-  }
-
-  Serial.println(F("-> Attempting Connection"));
-  if(wifi.join(ssid, pass, 0)){
-    Serial.println(F("-> Connection Success"));
-    WIFI_STATE = WIFI_SET;
-
-    Serial.print(F("IP: "));
-    Serial.println(wifi.getIP(addr, sizeof(addr))); // TODO get rid of buf
-    Serial.print(F("Netmask: "));
-    Serial.println(wifi.getNetmask(addr, sizeof(addr)));
-    Serial.print(F("Gateway: "));
-    Serial.println(wifi.getGateway(addr, sizeof(addr)));
-
-    basicAuthConnect(PSTR("POST"),PSTR("status"), true);
-
-  }
-  else {
-    Serial.println(F("Connection Failed"));
-    WIFI_STATE = WIFI_UNSET;
-    wifiAp(); //set Reset Adhoc Mode
-  }
+//
+//  if(wifi.setAuth(mode)) Serial.println(F("-> Set Auth Mode")); // TODO check if this is correct
+//  if(wifi.setPassphrase(pass)) Serial.println(F("-> Set Pass"));
+//  if(wifi.setDeviceID("Station")) Serial.print(F("-> Set DeviceID"));
+//  if(wifi.setSSID(ssid)) Serial.print(F("-> Set SSID  "));
+//  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.print(F("-> Set JOIN  "));
+//   if(wifi.setFtpUser(SKEY))Serial.print(F("-> Set Private Key  "));
+//   if(wifi.setFtpPassword(PKEY))Serial.print(F("-> Set Public Key  "));
+//  if( wifi.save() ) Serial.println(F("-> Saved"));
 
 }
-
-
-
-
-
-
-

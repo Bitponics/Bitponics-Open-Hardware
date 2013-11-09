@@ -8,7 +8,7 @@
 
 #define WIFI_UNSET  0
 #define WIFI_SET    1
-//#define WIFI_WEP    2
+//#define WIFI_MIX    3
 
 
 #include "sha256.h"
@@ -19,7 +19,8 @@ boolean lastBtnState = true;
 #include <WiFlyHQ.h>
 WiFly wifi;
 
-char deviceId[10] = "Bitponics";
+const char apModeId[15] = "BitponicsSetup";
+char deviceId[15];
 const char site[] = "www.bitponics.com";
 
 //Key Chars must have one extra space for `
@@ -49,32 +50,34 @@ unsigned long receiveWait = 36000;
 //********************************************************************************
 void setupWifi(unsigned int BAUD) {
 
-
-  Serial.print(F("\nFree Memory: "));
-  Serial.println(wifi.getFreeMemory(),DEC);
+ // Serial.print(F("\nFree Memory: "));
+ // Serial.println(wifi.getFreeMemory(),DEC);
 
   Serial1.begin(BAUD);
-
+  checkBtn();
   wifiUpdate();
-
+  
   if (!wifi.begin(&Serial1, &Serial)) {
     Serial.println(F("Failed to start wifi"));
     //terminal();
   }
-  checkBtn();
+  
+  if(wifi.enableDHCP() )Serial.println(F("-> DHCP Enabled "));
+  if(wifi.setProtocol(WIFLY_PROTOCOL_TCP)) Serial.println(F("-> TCP setup ")); // setup TCP protocol
+  
+  if(strcasecmp(ssid, PSTR("roving1")) == 0 ){
+    wifi.setDeviceID(apModeId);
+    wifi.setSSID(apModeId);
+    wifi.save();
+  }
 
   Serial.print(F("SSID:        "));
   wifi.getSSID(ssid, sizeof(ssid));
   Serial.println(ssid);
-  if(strcasecmp(ssid, deviceId) == 0 || strcasecmp(ssid, PSTR("roving1")) == 0 ){
-    Serial.println(F("-> Setting AP Mode"));
-    wifi.setDeviceID(deviceId);
-    wifi.save();
-  }
+
   macAddress(MAC);
   Serial.print(F("MAC:         "));
   Serial.println(MAC);
-
 
   Serial.print(F("WIFI Mode:   "));
   wifi.getDeviceID(deviceId, sizeof(deviceId));
@@ -83,7 +86,6 @@ void setupWifi(unsigned int BAUD) {
   if(deviceId[0] == 'B') WIFI_STATE = WIFI_UNSET;
   if(deviceId[0] == 'S') WIFI_STATE = WIFI_SET;
 
-  wifi.setProtocol(WIFLY_PROTOCOL_TCP); // setup TCP protocol
 
   if(WIFI_STATE == WIFI_UNSET) {
     wifiAp(); 
@@ -219,10 +221,11 @@ void checkBtn(){
       setColor(BLUE);
       delay(500);
     }
-
+    wifi.factoryRestore();
+    delay(1000);
     Serial.println(F("-> Setting AP Mode"));
-    wifi.setDeviceID(PSTR("Bitponics"));
-    wifi.setSSID(PSTR("Bitponics"));
+    wifi.setDeviceID(apModeId);
+    wifi.setSSID(apModeId);
     wifi.save();
     delay(2000);
     resetBoard();
