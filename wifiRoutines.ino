@@ -1,3 +1,5 @@
+
+
 //********************************************************************************
 void loadServerKeys(){
   wifi.getFTPUSER(SKEY, sizeof(SKEY));
@@ -45,12 +47,12 @@ void scanNetworks(){
   networks = wifi.getScanNew(data, sizeof(data), true);
   int scanCount = 0;
   //if String networks has only [] find networks
-  while(strlen(networks)<3 || scanCount++ < 3){
-    Serial.println("No networks found, retrying");
+  while(networks.length()<3 && scanCount < 3){
+    Serial.println(F("No networks found, retrying"));
     networks = wifi.getScanNew(data, sizeof(data), true);
-
+    scanCount++;
   }
-  Serial.println(networks);
+
 }
 
 //********************************************************************************
@@ -58,6 +60,7 @@ void wifiAp(){
   //WIFI_STATE=WIFI_UNSET;
 
   scanNetworks();
+  Serial.println(networks);
   Serial.print(F("-> Setting up AP... "));
   bwifiSet = false;
 
@@ -69,7 +72,7 @@ void wifiAp(){
     Serial.println(F("created"));
     Serial.print(F("IP:     "));
     Serial.println(wifi.getIP(addr, sizeof(addr)));
-
+ 
   } 
   else {
 
@@ -269,3 +272,5 @@ void wifiConnect(char *ssid, char *pass, int *mode){
 //  if( wifi.save() ) Serial.println(F("-> Saved"));
 
 }
+
+

@@ -54,78 +54,44 @@ void wifiAssocRequestHandler(){
 //********************************************************************************
 void wifiApRequestHandler(){
 
-  /* See if there is a request */
+  if (wifi.gets(data, sizeof(data))) {
+    if (strncmp_P(data, PSTR("GET"), 3) == 0) apGetResponse();
+    else if (strncmp_P(data, PSTR("*GET"), 4) == 0) apGetResponse(); 
+    else if (strncmp_P(data, PSTR("N*GET"), 5) == 0) apGetResponse();
+    else if (strncmp_P(data, PSTR("EN*GET"), 6) == 0) apGetResponse();
+    else if (strncmp_P(data, PSTR("PEN*GET"), 7) == 0) apGetResponse();
+    else if (strncmp_P(data, PSTR("OPEN*GET"), 8) == 0) apGetResponse();
+    else if (strncmp_P(data, PSTR("*OPEN*GET"), 9) == 0) apGetResponse();
 
+    else if (strncmp_P(data, PSTR("POST"), 4) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("POST"), 5) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("POST"), 6) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("POST"), 7) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("PEN*POST"), 8) == 0) apPostResponse(); 
+    else if (strncmp_P(data, PSTR("OPEN*POST"), 9) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("*OPEN*POST"), 10) == 0) apPostResponse();
+    else {
+      // Unexpected request
+      Serial.print(F("Unexpected Request : "));
+      Serial.println(data);
+      wifi.flushRx();		// discard rest of input
+      //Serial.println(F("Sending 404"));
+      //send404();
+    } 
 
-  switch(wifi.multiMatch_P(1000,2,F("GET"), F("POST"))){
-  case -1:
-    Serial.println(F("-> Unexpected Request"));
-    wifi.gets(data,sizeof(data));
-    Serial.println(data);
-    break;
-  case 0:
-    apGetResponse();
-    break;
-  case 1:
-    apPostResponse();
-    break;
 
   }
 
-
-  /*
-
-   if (wifi.gets(buf, sizeof(buf))) {
-   if (strncmp_P(buf, PSTR("GET"), 3) == 0) {
-   apGetResponse(); 
-   }
-   else if (strncmp_P(buf, PSTR("OPEN*GET"), 8) == 0) {
-   apGetResponse();
-   }
-   else if (strncmp_P(buf, PSTR("*OPEN*GET"), 9) == 0) {
-   apGetResponse();
-   }
-   else if (strncmp_P(buf, PSTR("PEN*GET"), 7) == 0) {
-   apGetResponse();
-   }  
-   else if (strncmp_P(buf, PSTR("POST"), 4) == 0) {
-   apPostResponse();
-   
-   }
-   else if (strncmp_P(buf, PSTR("OPEN*POST"), 9) == 0) {
-   apPostResponse();
-   
-   } 
-   else if (strncmp_P(buf, PSTR("PEN*POST"), 8) == 0) {
-   apPostResponse();
-   
-   } 
-   else if (strncmp_P(buf, PSTR("*OPEN*POST"), 10) == 0) {
-   apPostResponse();
-   
-   }
-   else {
-   // Unexpected request
-   Serial.print(F("Unexpected Request : "));
-   Serial.println(buf);
-   wifi.flushRx();		// discard rest of input
-   Serial.println(F("Sending 404"));
-   //send404();
-   } 
-   
-   
-   }
-   */
 }
 
 void apGetResponse(){
 
   Serial.println(F("-> Received GET request"));
-  //  while (wifi.gets(buf, sizeof(buf)) > 0) {	      
-  //    /* Skip rest of request */
-  //    Serial.println(buf);
-  //  }
-  //sendIndex();
+    while (wifi.gets(data, sizeof(data)) > 0) {	      
+      /* Skip rest of request */
+      Serial.println(data);
+    }
+
   sendInitialJSON();
   Serial.println(F("-> Sent JSON ")); 
 
@@ -162,19 +128,27 @@ void apPostResponse(){
   wifi.sendChunkln(F("\" }"));
   wifi.sendChunkln();
 
-//  if(strcasecmp(auth, "OPEN_MODE") == 0) mode = 0;
-//  else mode = 3;
+  //  if(strcasecmp(auth, "OPEN_MODE") == 0) mode = 0;
+  //  else mode = 3;
 
   if(wifi.setAuth(3)) Serial.println(F("-> Set Auth Mode")); // TODO check if this is correct
+  
   if(wifi.setPassphrase(pass)) Serial.println(F("-> Set Pass"));
-  if(wifi.setDeviceID("Station")) Serial.println(F("-> Set DeviceID"));
-  if(wifi.setSSID(ssid)) Serial.println(F("-> Set SSID  "));
-  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.println(F("-> Set JOIN  "));
-  if(wifi.setFtpUser(SKEY))Serial.println(F("-> Set Private Key  "));
-  if(wifi.setFtpPassword(PKEY))Serial.println(F("-> Set Public Key  "));
+  if(wifi.setDeviceID("Station")) Serial.print(F("-> Set DeviceID: "));
+  Serial.println(wifi.getDeviceID(data, sizeof(data)));
+  if(wifi.setSSID(ssid)) Serial.print(F("-> Set SSID: "));
+  Serial.println(wifi.getSSID(data, sizeof(data)));
+  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.print(F("-> Set JOIN: "));
+  Serial.println(wifi.getJoin());
+  if(wifi.setFtpUser(SKEY))Serial.print(F("-> Set Private Key: "));
+  Serial.println(wifi.getFTPUSER(data, sizeof(data)));
+  if(wifi.setFtpPassword(PKEY))Serial.print(F("-> Set Public Key: "));
+  Serial.println(wifi.getFTPPASS(data, sizeof(data)));
   if( wifi.save() ) Serial.println(F("-> Saved"));
 
- // wifiConnect(ssid, pass, mode);
+  // if(sizeof(SKEY)<16)
+
+  // wifiConnect(ssid, pass, mode);
 
   resetBoard();
 
@@ -190,6 +164,3 @@ void printHeaders(){
   wifi.println(F("Connection: close"));
   wifi.println();
 }
-
-
-

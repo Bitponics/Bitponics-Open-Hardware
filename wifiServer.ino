@@ -15,10 +15,12 @@ void sendInitialJSON(){
   wifi.sendChunk(F("{ \"mac\": \""));
   wifi.sendChunk(MAC);
   wifi.sendChunkln(F("\", \"networks\": "));
-  wifi.sendChunkln(networks);
+  wifi.sendChunkln(networks.c_str());
   wifi.sendChunkln(F("}"));
   wifi.sendChunkln();
+  
 }
+
 
 ////********************************************************************************
 ///** Send a confirmation of data recieved */

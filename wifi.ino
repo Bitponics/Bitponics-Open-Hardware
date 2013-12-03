@@ -35,14 +35,10 @@ char ssid[33];
 
 char data[200];
 char statesBuf[16];
-//char opt[20];
 boolean bwifiSet;
-/* time stuff */
-//unsigned long time_sensor = 0;
 unsigned long time_status = 0;
-//unsigned long smaensorPutDelay = 300000;
 const unsigned long statusPutDelay = 5000;
-char* networks;
+String networks;
 boolean bReceivedStatus = true;
 unsigned long receiveTimeout;
 unsigned long receiveWait = 36000;
@@ -54,13 +50,11 @@ void setupWifi(unsigned int BAUD) {
  // Serial.println(wifi.getFreeMemory(),DEC);
 
   Serial1.begin(BAUD);
-  checkBtn();
   wifiUpdate();
-  
   if (!wifi.begin(&Serial1, &Serial)) {
     Serial.println(F("Failed to start wifi"));
-    //terminal();
   }
+  checkBtn();
   
   if(wifi.enableDHCP() )Serial.println(F("-> DHCP Enabled "));
   if(wifi.setProtocol(WIFLY_PROTOCOL_TCP)) Serial.println(F("-> TCP setup ")); // setup TCP protocol
@@ -68,8 +62,9 @@ void setupWifi(unsigned int BAUD) {
   if(strcasecmp(ssid, PSTR("roving1")) == 0 ){
     wifi.setDeviceID(apModeId);
     wifi.setSSID(apModeId);
-    wifi.save();
+    
   }
+  wifi.save();
 
   Serial.print(F("SSID:        "));
   wifi.getSSID(ssid, sizeof(ssid));
@@ -106,9 +101,6 @@ void setupWifi(unsigned int BAUD) {
   timeout = millis();
 
 }
-
-
-
 
 //********************************************************************************
 
@@ -221,16 +213,18 @@ void checkBtn(){
       setColor(BLUE);
       delay(500);
     }
-    wifi.factoryRestore();
-    delay(1000);
-    Serial.println(F("-> Setting AP Mode"));
+    
+    Serial.print(F("-> Resoring wifi defaults..."));
+    if(wifi.factoryRestore() && wifi.reboot()) Serial.println(F(" done!"));
+    
+    Serial.println(F("-> Setting AP Mode... "));
     wifi.setDeviceID(apModeId);
     wifi.setSSID(apModeId);
     wifi.save();
+    Serial.println(F("done!"));
     delay(2000);
     resetBoard();
   }
 
 }
-
 

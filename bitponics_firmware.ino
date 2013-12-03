@@ -32,7 +32,7 @@ unsigned long requestCount = 0;
 int errors = 0;
 int errMax = 5;
 boolean setupSequence = true;
-boolean debug = false;
+boolean debug = true;
 
 unsigned int completedPosts = 0;
 unsigned int failedPosts = 0;
@@ -41,6 +41,7 @@ void setupWifi(unsigned int BAUD);
 void wifiApRequestHandler();
 boolean wifiConnection();
 void wifiLoop();
+void sendInitialJSON();
 
 
 //*********************  Sensor Variables  ***************************************
@@ -64,7 +65,7 @@ void setup() {
 
   setupRelays();
 
-  Serial.begin(38400);
+  Serial.begin(115200);
   Serial.println();
   Serial.println(F("**********************"));
   Serial.println(F("-> Device Boot"));
