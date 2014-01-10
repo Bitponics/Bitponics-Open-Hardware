@@ -138,13 +138,14 @@ void apPostResponse(){
   Serial.println(wifi.getDeviceID(data, sizeof(data)));
   if(wifi.setSSID(ssid)) Serial.print(F("-> Set SSID: "));
   Serial.println(wifi.getSSID(data, sizeof(data)));
-  if(wifi.setJoin(WIFLY_WLAN_JOIN_AUTO))Serial.print(F("-> Set JOIN: "));
-  Serial.println(wifi.getJoin());
   if(wifi.setFtpUser(SKEY))Serial.print(F("-> Set Private Key: "));
   Serial.println(wifi.getFTPUSER(data, sizeof(data)));
   if(wifi.setFtpPassword(PKEY))Serial.print(F("-> Set Public Key: "));
   Serial.println(wifi.getFTPPASS(data, sizeof(data)));
+  if(wifi.setJoin(1))Serial.print(F("-> Set JOIN: "));
+  Serial.println(wifi.getJoin());
   if( wifi.save() ) Serial.println(F("-> Saved"));
+  wifi.leave();
 
   // if(sizeof(SKEY)<16)
 

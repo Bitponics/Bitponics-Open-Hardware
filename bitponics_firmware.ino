@@ -22,6 +22,8 @@ const byte BLACK[] = {
 #define RESET 7
 #define WIFI_RESET 38
 #define BUTTON A2
+#define PING_RX_PIN A6
+#define PING_TX_PIN A5
 
 char addr[16];
 //char buf[80];
@@ -62,6 +64,9 @@ void setup() {
   digitalWrite(RESET, HIGH);
   pinMode(RESET, OUTPUT);
   pinMode(BUTTON, INPUT);
+  pinMode(PING_RX_PIN, INPUT);
+  pinMode(PING_TX_PIN, OUTPUT);
+  digitalWrite(PING_TX_PIN, HIGH);
 
   setupRelays();
 

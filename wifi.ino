@@ -59,15 +59,17 @@ void setupWifi(unsigned int BAUD) {
   if(wifi.enableDHCP() )Serial.println(F("-> DHCP Enabled "));
   if(wifi.setProtocol(WIFLY_PROTOCOL_TCP)) Serial.println(F("-> TCP setup ")); // setup TCP protocol
   
+  wifi.getSSID(ssid, sizeof(ssid));
+  
   if(strcasecmp(ssid, PSTR("roving1")) == 0 ){
     wifi.setDeviceID(apModeId);
     wifi.setSSID(apModeId);
-    
+    wifi.getSSID(ssid, sizeof(ssid));
+    Serial.println(F("inital setup detected, going to ap mode"));
   }
   wifi.save();
 
   Serial.print(F("SSID:        "));
-  wifi.getSSID(ssid, sizeof(ssid));
   Serial.println(ssid);
 
   macAddress(MAC);
@@ -83,10 +85,12 @@ void setupWifi(unsigned int BAUD) {
 
 
   if(WIFI_STATE == WIFI_UNSET) {
+    getSensors();
     wifiAp(); 
   }
   else {
     setColor(ORANGE);
+    wifi.setJoin(WIFLY_WLAN_JOIN_AUTO);
     loadServerKeys();
     while(!associateWifi()){
       associationAttemps++;
@@ -99,12 +103,15 @@ void setupWifi(unsigned int BAUD) {
     //if(!associateWifi()) wifiAp();
   }
   timeout = millis();
-
+  digitalWrite(PING_TX_PIN, LOW);
 }
 
 //********************************************************************************
 
 void wifiLoop(){
+  
+  pingReset();
+  
   delay(10);
   if(WIFI_STATE == WIFI_UNSET){
     if (wifi.available() > 0) {
@@ -203,6 +210,7 @@ void delayTimeout(){
   }
 }
 
+
 /// Reset network
 void checkBtn(){
 
@@ -228,3 +236,8 @@ void checkBtn(){
 
 }
 
+void pingReset(){
+    digitalWrite(PING_TX_PIN, HIGH); // send 
+    while(!digitalRead(PING_RX_PIN));// Serial.println("waiting response");
+    digitalWrite(PING_TX_PIN, LOW); 
+}

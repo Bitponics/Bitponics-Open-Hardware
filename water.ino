@@ -51,19 +51,25 @@ void getEc(){
   Serial3.print(water);
   Serial3.print(F("\r")); //ask device
   int count=0;
+  boolean bValSet = false;
   while(Serial3.available()==0) {
     delay(100);
-    if(++count>50) break; 
+    count++;
+    if(count>50){
+      itoa(0,ec,10);
+      Serial.print(F("EC Error: "));
+      break; 
+    }
   } 
-  boolean bValSet = false;
+ 
   while(Serial3.available()>0){
     if(!bValSet) {
       itoa(Serial3.parseInt(),ec,10);
-      Serial.println(ec);
       bValSet=true;
     }
     else Serial3.read();
   }
+  Serial.println(ec);
 
 }
 
