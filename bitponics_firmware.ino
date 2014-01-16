@@ -60,13 +60,14 @@ void setup() {
   setupLED();
   setupWDT();
 
-  digitalWrite(WIFI_RESET, HIGH);
-  digitalWrite(RESET, HIGH);
+
   pinMode(RESET, OUTPUT);
   pinMode(BUTTON, INPUT);
   pinMode(PING_RX_PIN, INPUT);
   pinMode(PING_TX_PIN, OUTPUT);
-  digitalWrite(PING_TX_PIN, HIGH);
+  digitalWrite(PING_TX_PIN, LOW);
+  digitalWrite(WIFI_RESET, HIGH);
+  digitalWrite(RESET, HIGH);
 
   setupRelays();
 
@@ -82,7 +83,7 @@ void setup() {
 
 void loop(){
   wifiLoop();
-  if(millis()>reset_time) resetBoard();
+  //if(millis()>reset_time) resetBoard();
 }
 
 

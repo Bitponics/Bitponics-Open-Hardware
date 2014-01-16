@@ -17,3 +17,12 @@ void setColor(const byte rgb[]){
 
 
 
+//void flash(color c, int d){
+// setColor(c);
+// delay(d);
+// setColor(BLACK);
+// delay(d)
+// setColor(c);
+// delay(d);
+// setColor(BLACK);
+//}

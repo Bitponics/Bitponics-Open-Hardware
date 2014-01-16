@@ -61,7 +61,7 @@ void setupWifi(unsigned int BAUD) {
   
   wifi.getSSID(ssid, sizeof(ssid));
   
-  if(strcasecmp(ssid, PSTR("roving1")) == 0 ){
+  if(strcasecmp(ssid, "roving1") == 0 || strcasecmp(ssid, "WiFly-EZX") == 0){
     wifi.setDeviceID(apModeId);
     wifi.setSSID(apModeId);
     wifi.getSSID(ssid, sizeof(ssid));
@@ -103,7 +103,6 @@ void setupWifi(unsigned int BAUD) {
     //if(!associateWifi()) wifiAp();
   }
   timeout = millis();
-  digitalWrite(PING_TX_PIN, LOW);
 }
 
 //********************************************************************************
@@ -187,12 +186,12 @@ void wifiUpdate(){
 
   Serial1.print("\r");
   delayTimeout();
-  if(Serial1.findUntil(PSTR("2.45"), PSTR("n"))) Serial.println(F("Wifi up to date"));
+  if(Serial1.findUntil("2.45", "n")) Serial.println(F("Wifi up to date"));
   else {
     Serial.print(F("Updating WIFI... "));
     Serial1.print(F("boot image 34\r"));
     delayTimeout();
-    if(Serial1.findUntil(PSTR("34"), PSTR("OK"))){
+    if(Serial1.findUntil("34", "OK")){
       Serial1.print(F("reboot\r"));
       delayTimeout();
       if(!Serial1.find(PSTR("*Reboot*"))); //reset
