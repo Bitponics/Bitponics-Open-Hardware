@@ -1,3 +1,5 @@
+float ver = 1.02;
+
 //global includes
 #include <Wire.h>
 //#include "customDataTypes.h"
@@ -17,13 +19,14 @@ const byte PURPLE[] = {
   255,0,255};
 const byte BLACK[] = {
   0,0,0};
-
-
+  
 #define RESET 7
 #define WIFI_RESET 38
 #define BUTTON A2
 #define PING_RX_PIN A6
 #define PING_TX_PIN A5
+
+
 
 char addr[16];
 //char buf[80];
@@ -44,6 +47,7 @@ void wifiApRequestHandler();
 boolean wifiConnection();
 void wifiLoop();
 void sendInitialJSON();
+
 
 
 //*********************  Sensor Variables  ***************************************
@@ -74,8 +78,8 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   Serial.println(F("**********************"));
-  Serial.println(F("-> Device Boot"));
-
+  Serial.print(F("-> Device Boot v"));
+  Serial.println(ver);
 
   setupSensors(38400);
   setupWifi(9600);

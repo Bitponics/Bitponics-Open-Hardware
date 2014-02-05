@@ -23,14 +23,21 @@ void wifiAssocRequestHandler(){
     }
     if(wifi.match(F("CALIB_MODE="))){
       Serial.print(F("calib mode = "));
-      wifi.getsTerm(calibMode, sizeof(calibMode),'\n');
-      Serial.println(calibMode);
-      //    calibMode=calibBuf;
-      calibrate();
 
+      char calibBuf[6];
+      wifi.getsTerm(calibBuf, sizeof(calibBuf),'\n');
+      Serial.println(calibBuf);
+      Serial.print(F("Last mode: "));
+      Serial.println(calibMode);
+      if(strcmp(calibMode, calibBuf)) {
+        strncpy(calibMode, calibBuf, 6);
+        calibrate();
+      }
+      else Serial.println(F("Already calibrated"));
+    }  
+    else{
+      memset(&calibMode[0], 0, sizeof(calibMode)); // clearing the calibMode array
     }
-    else memset(&calibMode[0], 0, sizeof(calibMode)); // clearing the calibMode array
-    //else Serial.println(F("no update matches"));
 
   }
   else {
@@ -38,6 +45,12 @@ void wifiAssocRequestHandler(){
     wifi.gets(errorMsg,sizeof(errorMsg));
     Serial.println(F("error "));
     Serial.println(errorMsg);
+    errorCount ++;
+    if(errorCount > 10){
+      resetWifi();
+      resetBoard();
+    }
+
   }
 
   Serial.println(F("------- Close -------"));
@@ -55,7 +68,7 @@ void wifiAssocRequestHandler(){
 void wifiApRequestHandler(){
 
   if (wifi.gets(data, sizeof(data))) {
-    if (strncmp_P(data, PSTR("GET"), 3) == 0) apGetResponse();
+    if      (strncmp_P(data, PSTR("GET"), 3) == 0) apGetResponse();
     else if (strncmp_P(data, PSTR("*GET"), 4) == 0) apGetResponse(); 
     else if (strncmp_P(data, PSTR("N*GET"), 5) == 0) apGetResponse();
     else if (strncmp_P(data, PSTR("EN*GET"), 6) == 0) apGetResponse();
@@ -64,15 +77,15 @@ void wifiApRequestHandler(){
     else if (strncmp_P(data, PSTR("*OPEN*GET"), 9) == 0) apGetResponse();
 
     else if (strncmp_P(data, PSTR("POST"), 4) == 0) apPostResponse();
-    else if (strncmp_P(data, PSTR("POST"), 5) == 0) apPostResponse();
-    else if (strncmp_P(data, PSTR("POST"), 6) == 0) apPostResponse();
-    else if (strncmp_P(data, PSTR("POST"), 7) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("*POST"), 5) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("N*POST"), 6) == 0) apPostResponse();
+    else if (strncmp_P(data, PSTR("EN*POST"), 7) == 0) apPostResponse();
     else if (strncmp_P(data, PSTR("PEN*POST"), 8) == 0) apPostResponse(); 
     else if (strncmp_P(data, PSTR("OPEN*POST"), 9) == 0) apPostResponse();
     else if (strncmp_P(data, PSTR("*OPEN*POST"), 10) == 0) apPostResponse();
     else {
       // Unexpected request
-      Serial.print(F("Unexpected Request : "));
+      Serial.print(F("Unexpected Request: "));
       Serial.println(data);
       wifi.flushRx();		// discard rest of input
       //Serial.println(F("Sending 404"));
@@ -87,10 +100,10 @@ void wifiApRequestHandler(){
 void apGetResponse(){
 
   Serial.println(F("-> Received GET request"));
-    while (wifi.gets(data, sizeof(data)) > 0) {	      
-      /* Skip rest of request */
-      Serial.println(data);
-    }
+  while (wifi.gets(data, sizeof(data)) > 0) {	      
+    /* Skip rest of request */
+    Serial.println(data);
+  }
 
   sendInitialJSON();
   Serial.println(F("-> Sent JSON ")); 
@@ -132,7 +145,7 @@ void apPostResponse(){
   //  else mode = 3;
 
   if(wifi.setAuth(3)) Serial.println(F("-> Set Auth Mode")); // TODO check if this is correct
-  
+
   if(wifi.setPassphrase(pass)) Serial.println(F("-> Set Pass"));
   if(wifi.setDeviceID("Station")) Serial.print(F("-> Set DeviceID: "));
   Serial.println(wifi.getDeviceID(data, sizeof(data)));
@@ -165,3 +178,5 @@ void printHeaders(){
   wifi.println(F("Connection: close"));
   wifi.println();
 }
+
+

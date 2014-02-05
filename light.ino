@@ -12,7 +12,7 @@ void setupLight(){
     Serial.print(F("no lux sensor detected"));
     while(1);
   }
-  else Serial.println(F("- lux Sensor"));
+  else Serial.println(F("- lux"));
 
   tsl.enableAutoGain(true);          /* Auto-gain ... switches automatically between 1x and 16x */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);      /* fast but low resolution */

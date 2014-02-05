@@ -42,6 +42,7 @@ String networks;
 boolean bReceivedStatus = true;
 unsigned long receiveTimeout;
 unsigned long receiveWait = 36000;
+int errorCount = 0;
 
 //********************************************************************************
 void setupWifi(unsigned int BAUD) {
@@ -109,7 +110,7 @@ void setupWifi(unsigned int BAUD) {
 
 void wifiLoop(){
   
-  pingReset();
+ // pingReset();
   
   delay(10);
   if(WIFI_STATE == WIFI_UNSET){
@@ -224,7 +225,7 @@ void checkBtn(){
     Serial.print(F("-> Resoring wifi defaults..."));
     if(wifi.factoryRestore() && wifi.reboot()) Serial.println(F(" done!"));
     
-    Serial.println(F("-> Setting AP Mode... "));
+    Serial.print(F("-> Setting AP Mode... "));
     wifi.setDeviceID(apModeId);
     wifi.setSSID(apModeId);
     wifi.save();

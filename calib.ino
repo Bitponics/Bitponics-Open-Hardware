@@ -1,12 +1,13 @@
-const long phCalibTime = 180000;
-const long ecCalibTime = 5000;
+const int calibTime = 30000;
 
 char calibMode[6] = "";
+boolean calibComplete = false;
 
 void calibrate(){
   setColor(YELLOW);
 
-  Serial.println("Calibrating....");
+  Serial.print(F("Calibrating...."));
+  Serial.println(calibMode);
 
   // PH *****
   if(!memcmp(calibMode,"ph_7", 4)){
@@ -39,6 +40,7 @@ void calibrate(){
     delay(1000);
     while(Serial3.available() > 0)  Serial.print(char(Serial3.read()));
     Serial.println(F("ec_dr calib complete"));
+    calibComplete = true;
   } 
   else if(!memcmp(calibMode,"ec_hi", 5)){
     ecCalib("30");
@@ -64,11 +66,12 @@ void ecCalib(String ecCode){
   Serial.print(calibMode);
   Serial.println(F(" calib complete"));
   timeout = millis();
+  calibComplete = true;
 }
 
 void calibDelay(){
   timeout = millis();
-  delay(5000);
+  delay(calibTime);
   timeout = millis(); 
 }
 
@@ -85,6 +88,7 @@ void phCalib(String phCode){
   while(Serial2.available() > 0)  Serial.print(char(Serial2.read()));  // read confirmation
   Serial.print(calibMode);
   Serial.println(F(" calib complete"));
+  calibComplete = true;
 }
 
 
