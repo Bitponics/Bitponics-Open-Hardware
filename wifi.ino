@@ -110,7 +110,7 @@ void setupWifi(unsigned int BAUD) {
 
 void wifiLoop(){
   
- // pingReset();
+  pingReset();
   
   delay(10);
   if(WIFI_STATE == WIFI_UNSET){
