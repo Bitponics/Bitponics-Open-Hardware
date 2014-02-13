@@ -35,47 +35,25 @@ void setupTemps(){
 
 void getWaterTemp(){
   Serial.print(F("water temp...  "));
-  
+
   waterSensor.requestTemperatures();
-  //water = waterSensor.getTempC(waterTempAddress);
-      dtostrf(waterSensor.getTempC(waterTempAddress),4,2,water);
+  dtostrf(waterSensor.getTempC(waterTempAddress),4,2,water);
   Serial.println(water);
-  
-//  return waterSensor.getTempC(waterTempAddress); 
 
 }
 
 void getAirTemp(){
   Serial.print(F("air temp...    "));
   errors= 0;
-  //air = dht.readTemperature();
   dtostrf(dht.readTemperature(),4,2,air);
-//  while(isnan(air)){
-//    errors++;
-//    if(errors > errMax) {
-//      Serial.println(F("temperature read error... reseting!"));
-//      resetBoard(); 
-//    }
-//  }
-
-Serial.println(air);
+  Serial.println(air);
 }
 
 void getHumidity(){
- // float h = dht.readHumidity();
-// hum = dht.readHumidity();
-Serial.print(F("humidity...    "));
+  Serial.print(F("humidity...    "));
   dtostrf(dht.readHumidity(),4,2,hum);
-Serial.println(hum);
-
-//  while(isnan(h)){
-//    errors++;
-//    if(errors > errMax) {
-//      Serial.println(F("humididty read error... reseting!"));
-//      resetBoard(); 
-//    }
-//  }
- // return h;
+  Serial.println(hum);
 }
+
 
 
